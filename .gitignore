@@ -36,10 +36,6 @@ yarn-error.log*
 # vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
 # gói đóng sẵn để mang đi
 dist-offline/
 scripts/out/

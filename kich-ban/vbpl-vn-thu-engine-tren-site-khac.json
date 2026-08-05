@@ -1,0 +1,60 @@
+{
+  "ten": "vbpl.vn — thử engine trên site khác",
+  "buoc": [
+    {
+      "id": "v1",
+      "nhan": "Mở CSDL quốc gia về pháp luật",
+      "hanhDong": {
+        "loai": "mo-trang",
+        "url": "https://vbpl.vn/pages/portal.aspx",
+        "choSelector": "body"
+      }
+    },
+    {
+      "id": "v2",
+      "nhan": "Lấy tiêu đề trang",
+      "hanhDong": {
+        "loai": "lay-mot",
+        "ten": "tieu_de_trang",
+        "selector": "title",
+        "nguon": {
+          "kieu": "text"
+        }
+      }
+    },
+    {
+      "id": "v3",
+      "nhan": "Đếm số link bằng JS",
+      "hanhDong": {
+        "loai": "chay-js",
+        "ten": "so_link",
+        "ma": "return document.querySelectorAll('a[href]').length"
+      }
+    },
+    {
+      "id": "v4",
+      "nhan": "Bóc 6 link đầu thành bảng",
+      "hanhDong": {
+        "loai": "lay-bang",
+        "ten": "link",
+        "selectorDong": "a[href]",
+        "gioiHan": 6,
+        "cot": [
+          {
+            "ten": "chu",
+            "nguon": {
+              "kieu": "text"
+            }
+          },
+          {
+            "ten": "dia_chi",
+            "nguon": {
+              "kieu": "thuoc-tinh",
+              "ten": "href"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

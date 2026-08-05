@@ -35,16 +35,30 @@ mkdir -p "$RA/.next"
 cp -R "$GOC/.next/static" "$RA/.next/static"
 [[ -d "$GOC/public" ]] && cp -R "$GOC/public" "$RA/public"
 
+# kịch bản đã lưu → mang theo để máy đích có sẵn mà dùng.
+# Dùng "/." + mkdir -p vì bản standalone có thể đã tự tạo thư mục kich-ban rỗng,
+# lúc đó `cp -R src dst` sẽ lồng thành kich-ban/kich-ban.
+if [[ -d "$GOC/kich-ban" ]]; then
+  mkdir -p "$RA/kich-ban"
+  cp -R "$GOC/kich-ban/." "$RA/kich-ban/"
+fi
+
 # .env.local chứa tài khoản TVPL — mang theo để máy đích chạy được ngay.
 # Nếu không muốn nhúng mật khẩu vào gói, xoá dòng cp này và tự tạo .env.local ở máy đích.
 [[ -f "$GOC/.env.local" ]] && cp "$GOC/.env.local" "$RA/.env.local"
 
-echo "▶ 3/5  Kiểm tra playwright-core có được gom vào chưa"
-if [[ ! -d "$RA/node_modules/playwright-core" ]]; then
-  echo "  … bộ dò phụ thuộc bỏ sót, copy tay"
+echo "▶ 3/5  Kiểm tra playwright-core có được gom ĐỦ chưa"
+# Kiểm file thật, không chỉ kiểm thư mục: bộ dò của Next hay copy thiếu
+# browsers.json và làm gói chết lúc chạy với lỗi "Cannot find module".
+if [[ ! -f "$RA/node_modules/playwright-core/browsers.json" ]]; then
+  echo "  … thiếu file, copy tay cả package"
+  rm -rf "$RA/node_modules/playwright-core"
   mkdir -p "$RA/node_modules"
   cp -R "$GOC/node_modules/playwright-core" "$RA/node_modules/playwright-core"
 fi
+for f in browsers.json package.json index.js; do
+  [[ -f "$RA/node_modules/playwright-core/$f" ]] || { echo "✗ vẫn thiếu playwright-core/$f"; exit 1; }
+done
 echo "  ✓ playwright-core: $(du -sh "$RA/node_modules/playwright-core" | cut -f1)"
 
 if [[ "$NHUNG_NODE" == "1" ]]; then
@@ -111,6 +125,11 @@ QUAN TRỌNG — VỀ CHUYỆN "KHÔNG CÓ MẠNG"
   bấm tìm kiếm sẽ báo lỗi mạng.
   Muốn dùng thật sự offline thì phải đổi thiết kế: chạy sẵn trên máy có mạng,
   xuất kết quả ra file JSON, rồi mang file đó sang máy offline để đọc.
+
+KỊCH BẢN
+  Kịch bản nằm trong thư mục kich-ban/ dạng JSON. Copy thêm file .json vào đó là
+  app tự thấy trong danh sách "Mở kịch bản đã lưu". Bấm Lưu trong app cũng ghi
+  vào đây.
 
 TÀI KHOẢN
   Sửa file .env.local nếu cần đổi tài khoản TVPL:

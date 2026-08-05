@@ -1,6 +1,5 @@
 import { chayKichBan, DangChayError } from '@/lib/kich-ban/engine'
-import { kiemTraKichBan, type KichBan } from '@/lib/kich-ban/loai'
-import type { SuKien } from '@/lib/kich-ban/su-kien'
+import { kiemTraKichBan } from '@/lib/kich-ban/loai'
 import { isPace } from '@/lib/tvpl/pace'
 
 export const runtime = 'nodejs'
@@ -12,8 +11,8 @@ export const maxDuration = 900
  * JSON). Dùng POST + đọc stream thủ công thay vì EventSource, vì EventSource
  * chỉ gửi được GET nên không mang nổi cả kịch bản.
  */
-export async function POST(req: Request) {
-  let than: { kichBan?: KichBan; pace?: string }
+export async function POST(req) {
+  let than
   try {
     than = await req.json()
   } catch {
@@ -32,7 +31,7 @@ export async function POST(req: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       let dongCua = false
-      const gui = (e: SuKien) => {
+      const gui = (e) => {
         if (dongCua) return
         try {
           controller.enqueue(encoder.encode(JSON.stringify(e) + '\n'))

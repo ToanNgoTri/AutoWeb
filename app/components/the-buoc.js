@@ -1,45 +1,33 @@
 'use client'
 
-import {
-  hanhDongMacDinh,
-  META_HANH_DONG,
-  moTaBuoc,
-  type Buoc,
-  type CotDuLieu,
-  type HanhDong,
-  type LoaiHanhDong,
-  type Nguon,
-} from '@/lib/kich-ban/loai'
-import type { TrangThaiBuoc } from '@/lib/kich-ban/su-kien'
+import { hanhDongMacDinh, META_HANH_DONG, moTaBuoc } from '@/lib/kich-ban/loai'
+import { useBoiCanh } from './boi-canh'
+import { DanhSachBuoc } from './danh-sach-buoc'
 import { OSelector } from './o-selector'
 
 const inp =
   'w-full rounded-md border border-neutral-700 bg-neutral-950 px-2.5 py-1.5 text-xs text-neutral-100 placeholder:text-neutral-600 focus:border-sky-600 focus:outline-none'
 const lbl = 'mb-1 block text-[11px] font-medium text-neutral-400'
 
-export function TheBuoc({
-  buoc,
-  thuTu,
-  tong,
-  trangThai,
-  chiTiet,
-  doi,
-  xoa,
-  chuyen,
-  nhanBan,
-}: {
-  buoc: Buoc
-  thuTu: number
-  tong: number
-  trangThai?: TrangThaiBuoc
-  chiTiet?: string
-  doi: (b: Buoc) => void
-  xoa: () => void
-  chuyen: (huong: -1 | 1) => void
-  nhanBan: () => void
-}) {
+/**
+ * Form sửa một bước. Thân form đổi theo `hanhDong.loai`.
+ *
+ * @param {object} props
+ * @param {import('@/lib/kich-ban/loai').Buoc} props.buoc
+ * @param {number} props.thuTu
+ * @param {number} props.tong
+ * @param {(b: import('@/lib/kich-ban/loai').Buoc) => void} props.doi
+ * @param {() => void} props.xoa
+ * @param {(huong: -1 | 1) => void} props.chuyen
+ * @param {() => void} props.nhanBan
+ */
+export function TheBuoc({ buoc, thuTu, tong, doi, xoa, chuyen, nhanBan }) {
+  const { trangThai: bang, tenPhucHoi } = useBoiCanh()
+  const tt = bang[buoc.id]
+  const trangThai = tt?.tt
+  const chiTiet = tt?.ct
   const a = buoc.hanhDong
-  const datA = (moi: Partial<HanhDong>) => doi({ ...buoc, hanhDong: { ...a, ...moi } as HanhDong })
+  const datA = (moi) => doi({ ...buoc, hanhDong: { ...a, ...moi } })
 
   const vien =
     trangThai === 'dang-chay'
@@ -62,7 +50,7 @@ export function TheBuoc({
 
         <select
           value={a.loai}
-          onChange={(e) => doi({ ...buoc, hanhDong: hanhDongMacDinh(e.target.value as LoaiHanhDong) })}
+          onChange={(e) => doi({ ...buoc, hanhDong: hanhDongMacDinh(e.target.value) })}
           className="rounded-md border border-neutral-700 bg-neutral-950 px-2 py-1 text-xs font-medium text-sky-300 focus:outline-none"
         >
           {META_HANH_DONG.map((m) => (
@@ -72,6 +60,23 @@ export function TheBuoc({
           ))}
         </select>
 
+        {tt?.lanLap !== undefined && (
+          <span
+            title="Lượt lặp gần nhất mà bước này chạy"
+            className="shrink-0 rounded bg-violet-500/15 px-1.5 py-0.5 text-[10px] text-violet-300"
+          >
+            lượt {tt.lanLap}
+          </span>
+        )}
+        {tt?.trongPhucHoi && (
+          <span
+            title="Bước này chạy trong quy trình phục hồi"
+            className="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] text-emerald-300"
+          >
+            phục hồi
+          </span>
+        )}
+
         <input
           value={buoc.nhan ?? ''}
           onChange={(e) => doi({ ...buoc, nhan: e.target.value })}
@@ -80,19 +85,19 @@ export function TheBuoc({
         />
 
         <div className="flex shrink-0 items-center gap-0.5 text-neutral-500">
-          <IconBtn title="Lên" onClick={() => chuyen(-1)} disabled={thuTu === 1}>
+          <IconBtn title="Đưa bước lên" onClick={() => chuyen(-1)} disabled={thuTu === 1}>
             ↑
           </IconBtn>
-          <IconBtn title="Xuống" onClick={() => chuyen(1)} disabled={thuTu === tong}>
+          <IconBtn title="Đưa bước xuống" onClick={() => chuyen(1)} disabled={thuTu === tong}>
             ↓
           </IconBtn>
-          <IconBtn title="Nhân bản" onClick={nhanBan}>
+          <IconBtn title="Nhân bản bước" onClick={nhanBan}>
             ⧉
           </IconBtn>
           <IconBtn title={buoc.tat ? 'Bật lại' : 'Tắt tạm'} onClick={() => doi({ ...buoc, tat: !buoc.tat })}>
             {buoc.tat ? '○' : '●'}
           </IconBtn>
-          <IconBtn title="Xoá" onClick={xoa} nguyHiem>
+          <IconBtn title="Xoá bước" onClick={xoa} nguyHiem>
             ✕
           </IconBtn>
         </div>
@@ -123,7 +128,7 @@ export function TheBuoc({
                 <label className={lbl}>Chờ đến khi</label>
                 <select
                   value={a.trangThai ?? 'hien'}
-                  onChange={(e) => datA({ trangThai: e.target.value as 'hien' | 'an' })}
+                  onChange={(e) => datA({ trangThai: e.target.value })}
                   className={inp}
                 >
                   <option value="hien">hiện ra</option>
@@ -218,7 +223,7 @@ export function TheBuoc({
                 <label className={lbl}>Điều kiện</label>
                 <select
                   value={a.dieuKien}
-                  onChange={(e) => datA({ dieuKien: e.target.value as 'co-mat' | 'vang-mat' | 'chua-chu' })}
+                  onChange={(e) => datA({ dieuKien: e.target.value })}
                   className={inp}
                 >
                   <option value="co-mat">có mặt / đang hiện</option>
@@ -291,6 +296,162 @@ export function TheBuoc({
           </>
         )}
 
+        {a.loai === 'lap' && (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={lbl}>Lặp theo kiểu</label>
+                <select value={a.kieu} onChange={(e) => datA({ kieu: e.target.value })} className={inp}>
+                  <option value="so-lan">Đúng N lượt</option>
+                  <option value="moi-dong">Mỗi dòng của một bảng đã bóc</option>
+                  <option value="cho-den-khi">Tới khi một điều kiện thoả</option>
+                </select>
+              </div>
+              {a.kieu === 'so-lan' && (
+                <div>
+                  <label className={lbl}>Số lượt</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={a.soLan ?? ''}
+                    onChange={(e) => datA({ soLan: Number(e.target.value) })}
+                    className={inp}
+                  />
+                </div>
+              )}
+              {a.kieu === 'moi-dong' && (
+                <div>
+                  <label className={lbl}>Tên bảng (do bước “Lấy bảng” trước đó tạo ra)</label>
+                  <input
+                    value={a.tenBang ?? ''}
+                    onChange={(e) => datA({ tenBang: e.target.value })}
+                    placeholder="danh_sach"
+                    className={`${inp} font-mono`}
+                  />
+                </div>
+              )}
+              {a.kieu === 'cho-den-khi' && (
+                <div>
+                  <label className={lbl}>Tối đa bao nhiêu lượt (chống lặp vô hạn)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={a.toiDa ?? ''}
+                    onChange={(e) => datA({ toiDa: Number(e.target.value) })}
+                    className={inp}
+                  />
+                </div>
+              )}
+            </div>
+
+            {a.kieu === 'cho-den-khi' && (
+              <div className="rounded-md border border-neutral-800 bg-neutral-950/40 p-2">
+                <p className={lbl}>Dừng lặp khi…</p>
+                <OSelector
+                  nhan="Phần tử để kiểm"
+                  giaTri={a.dungKhi?.selector ?? ''}
+                  doi={(v) => datA({ dungKhi: { selector: v, dieuKien: a.dungKhi?.dieuKien ?? 'co-mat' } })}
+                />
+                <select
+                  value={a.dungKhi?.dieuKien ?? 'co-mat'}
+                  onChange={(e) =>
+                    datA({
+                      dungKhi: {
+                        selector: a.dungKhi?.selector ?? '',
+                        dieuKien: e.target.value,
+                      },
+                    })
+                  }
+                  className={`${inp} mt-2`}
+                >
+                  <option value="co-mat">…phần tử đó HIỆN ra</option>
+                  <option value="vang-mat">…phần tử đó ẨN đi / không còn</option>
+                </select>
+              </div>
+            )}
+
+            {a.kieu === 'moi-dong' && (
+              <p className="rounded-md border border-violet-800/50 bg-violet-500/5 px-2.5 py-2 text-[11px] leading-relaxed text-violet-200/80">
+                Trong thân lặp dùng <code className="text-violet-300">{'{{DONG.tên_cột}}'}</code> để lấy giá
+                trị của dòng đang xử lý (ví dụ mở <code className="text-violet-300">{'{{DONG.link}}'}</code>
+                ), và <code className="text-violet-300">{'{{LAP_SO}}'}</code> /{' '}
+                <code className="text-violet-300">{'{{LAP_TONG}}'}</code> cho số lượt. Bước “Lấy bảng” chạy
+                trong lặp sẽ <b>nối thêm</b> dòng vào bảng cùng tên chứ không ghi đè.
+              </p>
+            )}
+
+            <div className="rounded-md border border-violet-900/60 bg-violet-500/[0.04] p-2">
+              <p className="mb-1 text-[11px] font-medium text-violet-300">
+                Các bước chạy lại mỗi lượt ({a.buoc.length})
+              </p>
+              <DanhSachBuoc
+                ds={a.buoc}
+                doi={(moi) => datA({ buoc: moi })}
+                nhanThemCuoi="Thêm bước con ở cuối"
+                trongVongLap
+              />
+            </div>
+          </>
+        )}
+
+        {a.loai === 'goi-phuc-hoi' && (
+          <div>
+            <label className={lbl}>Quy trình phục hồi cần chạy</label>
+            {tenPhucHoi.length === 0 ? (
+              <p className="rounded-md border border-amber-700/50 bg-amber-500/10 px-2.5 py-2 text-[11px] text-amber-200">
+                Chưa khai quy trình phục hồi nào. Thêm ở mục <b>Phục hồi</b> phía dưới danh sách bước.
+              </p>
+            ) : (
+              <select
+                value={a.tenPhucHoi}
+                onChange={(e) => datA({ tenPhucHoi: e.target.value })}
+                className={inp}
+              >
+                <option value="">— chọn —</option>
+                {tenPhucHoi.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
+
+        {/* điều kiện chạy */}
+        <div className="rounded-md border border-neutral-800 bg-neutral-950/40 p-2">
+          <ChkBox
+            tick={!!buoc.chayKhi}
+            doi={(v) =>
+              doi({ ...buoc, chayKhi: v ? { selector: '', dieuKien: 'co-mat' } : undefined })
+            }
+          >
+            Chỉ chạy bước này khi…
+          </ChkBox>
+          {buoc.chayKhi && (
+            <div className="mt-2 space-y-2">
+              <OSelector
+                nhan="Phần tử để kiểm tra"
+                giaTri={buoc.chayKhi.selector}
+                doi={(v) => doi({ ...buoc, chayKhi: { ...buoc.chayKhi, selector: v } })}
+              />
+              <select
+                value={buoc.chayKhi.dieuKien}
+                onChange={(e) =>
+                  doi({
+                    ...buoc,
+                    chayKhi: { ...buoc.chayKhi, dieuKien: e.target.value },
+                  })
+                }
+                className={inp}
+              >
+                <option value="co-mat">…phần tử đó ĐANG HIỆN</option>
+                <option value="vang-mat">…phần tử đó ĐANG ẨN / không có</option>
+              </select>
+            </div>
+          )}
+        </div>
+
         {/* tuỳ chọn chung */}
         <div className="flex items-center justify-between border-t border-neutral-800 pt-2">
           <ChkBox tick={!!buoc.boQuaLoi} doi={(v) => doi({ ...buoc, boQuaLoi: v })}>
@@ -307,21 +468,33 @@ export function TheBuoc({
   )
 }
 
-function BangForm({
-  ten,
-  selectorDong,
-  gioiHan,
-  cot,
-  doi,
-}: {
-  ten: string
-  selectorDong: string
-  gioiHan?: number
-  cot: CotDuLieu[]
-  doi: (x: { ten?: string; selectorDong?: string; gioiHan?: number; cot?: CotDuLieu[] }) => void
-}) {
-  const datCot = (i: number, c: Partial<CotDuLieu>) =>
-    doi({ cot: cot.map((x, j) => (i === j ? { ...x, ...c } : x)) })
+/**
+ * @param {object} props
+ * @param {string} props.ten
+ * @param {string} props.selectorDong
+ * @param {number} [props.gioiHan]
+ * @param {import('@/lib/kich-ban/loai').CotDuLieu[]} props.cot
+ * @param {(x: { ten?: string, selectorDong?: string, gioiHan?: number, cot?: import('@/lib/kich-ban/loai').CotDuLieu[] }) => void} props.doi
+ */
+function BangForm({ ten, selectorDong, gioiHan, cot, doi }) {
+  const datCot = (i, c) => doi({ cot: cot.map((x, j) => (i === j ? { ...x, ...c } : x)) })
+
+  const chenCot = (viTri) =>
+    doi({
+      cot: [
+        ...cot.slice(0, viTri),
+        { ten: `cot_${cot.length + 1}`, nguon: { kieu: 'text' } },
+        ...cot.slice(viTri),
+      ],
+    })
+
+  const chuyenCot = (i, huong) => {
+    const j = i + huong
+    if (j < 0 || j >= cot.length) return
+    const ds = [...cot]
+    ;[ds[i], ds[j]] = [ds[j], ds[i]]
+    doi({ cot: ds })
+  }
 
   return (
     <>
@@ -351,20 +524,24 @@ function BangForm({
       />
 
       <div className="rounded-md border border-neutral-800 bg-neutral-950/50 p-2">
-        <div className="mb-1.5 flex items-center justify-between">
+        <div className="mb-1 flex items-center justify-between">
           <span className="text-[11px] font-medium text-neutral-400">Các cột ({cot.length})</span>
           <button
             type="button"
-            onClick={() => doi({ cot: [...cot, { ten: `cot_${cot.length + 1}`, nguon: { kieu: 'text' } }] })}
+            onClick={() => chenCot(cot.length)}
             className="rounded border border-neutral-700 px-2 py-0.5 text-[11px] text-neutral-300 hover:bg-neutral-800"
           >
-            + Thêm cột
+            + Thêm cột ở cuối
           </button>
         </div>
 
-        <div className="space-y-2">
+        {/* Giữa mọi cặp cột cũng có điểm "+" để chèn đúng chỗ, và ↑↓ để đổi thứ tự
+            — thứ tự cột chính là thứ tự cột trong bảng kết quả và file CSV. */}
+        <div>
+          <ChenDong chen={() => chenCot(0)} />
           {cot.map((c, i) => (
-            <div key={i} className="rounded border border-neutral-800 bg-neutral-900/50 p-2">
+            <div key={i}>
+            <div className="rounded border border-neutral-800 bg-neutral-900/50 p-2">
               <div className="mb-1.5 flex gap-1.5">
                 <input
                   value={c.ten}
@@ -374,6 +551,33 @@ function BangForm({
                 />
                 <button
                   type="button"
+                  title="Đưa cột lên"
+                  onClick={() => chuyenCot(i, -1)}
+                  disabled={i === 0}
+                  className="shrink-0 rounded border border-neutral-700 px-1.5 text-xs text-neutral-500 hover:text-neutral-200 disabled:opacity-25"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  title="Đưa cột xuống"
+                  onClick={() => chuyenCot(i, 1)}
+                  disabled={i === cot.length - 1}
+                  className="shrink-0 rounded border border-neutral-700 px-1.5 text-xs text-neutral-500 hover:text-neutral-200 disabled:opacity-25"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  title="Nhân bản cột"
+                  onClick={() => doi({ cot: [...cot.slice(0, i + 1), structuredClone(c), ...cot.slice(i + 1)] })}
+                  className="shrink-0 rounded border border-neutral-700 px-1.5 text-xs text-neutral-500 hover:text-neutral-200"
+                >
+                  ⧉
+                </button>
+                <button
+                  type="button"
+                  title="Xoá cột"
                   onClick={() => doi({ cot: cot.filter((_, j) => j !== i) })}
                   disabled={cot.length === 1}
                   className="shrink-0 rounded border border-neutral-700 px-2 text-xs text-neutral-500 hover:border-red-700 hover:text-red-400 disabled:opacity-30"
@@ -405,6 +609,8 @@ function BangForm({
                 />
               </div>
             </div>
+            <ChenDong chen={() => chenCot(i + 1)} />
+            </div>
           ))}
         </div>
       </div>
@@ -412,7 +618,30 @@ function BangForm({
   )
 }
 
-function NguonChon({ nguon, doi }: { nguon: Nguon; doi: (n: Nguon) => void }) {
+/** Điểm chèn mảnh dùng cho danh sách cột — chỉ hiện khi rê chuột vào. */
+function ChenDong({ chen }) {
+  return (
+    <button
+      type="button"
+      onClick={chen}
+      title="Chèn một cột vào đây"
+      className="group flex h-4 w-full items-center gap-2"
+    >
+      <span className="h-px flex-1 bg-transparent transition-colors group-hover:bg-neutral-700" />
+      <span className="flex h-4 w-4 items-center justify-center rounded-full border border-neutral-700 text-[10px] leading-none text-neutral-600 opacity-0 transition-opacity group-hover:opacity-100">
+        +
+      </span>
+      <span className="h-px flex-1 bg-transparent transition-colors group-hover:bg-neutral-700" />
+    </button>
+  )
+}
+
+/**
+ * @param {object} props
+ * @param {import('@/lib/kich-ban/loai').Nguon} props.nguon
+ * @param {(n: import('@/lib/kich-ban/loai').Nguon) => void} props.doi
+ */
+function NguonChon({ nguon, doi }) {
   return (
     <div>
       <label className={lbl}>Lấy gì</label>
@@ -420,14 +649,17 @@ function NguonChon({ nguon, doi }: { nguon: Nguon; doi: (n: Nguon) => void }) {
         <select
           value={nguon.kieu}
           onChange={(e) => {
-            const k = e.target.value as Nguon['kieu']
-            doi(k === 'thuoc-tinh' ? { kieu: 'thuoc-tinh', ten: 'href' } : { kieu: k })
+            const k = e.target.value
+            if (k === 'thuoc-tinh') doi({ kieu: 'thuoc-tinh', ten: 'href' })
+            else if (k === 'bien') doi({ kieu: 'bien', ten: 'DONG.' })
+            else doi({ kieu: k })
           }}
           className={inp}
         >
           <option value="text">Chữ (text)</option>
           <option value="thuoc-tinh">Thuộc tính</option>
           <option value="html">HTML bên trong</option>
+          <option value="bien">Biến (không đọc DOM)</option>
         </select>
         {nguon.kieu === 'thuoc-tinh' && (
           <input
@@ -437,20 +669,27 @@ function NguonChon({ nguon, doi }: { nguon: Nguon; doi: (n: Nguon) => void }) {
             className={`${inp} font-mono`}
           />
         )}
+        {nguon.kieu === 'bien' && (
+          <input
+            value={nguon.ten}
+            onChange={(e) => doi({ kieu: 'bien', ten: e.target.value })}
+            placeholder="DONG.so_hieu"
+            title="DONG.<tên cột> trong vòng lặp mỗi dòng, LAP_SO, hoặc biến trong .env.local"
+            className={`${inp} font-mono`}
+          />
+        )}
       </div>
     </div>
   )
 }
 
-function ChkBox({
-  tick,
-  doi,
-  children,
-}: {
-  tick: boolean
-  doi: (v: boolean) => void
-  children: React.ReactNode
-}) {
+/**
+ * @param {object} props
+ * @param {boolean} props.tick
+ * @param {(v: boolean) => void} props.doi
+ * @param {import('react').ReactNode} props.children
+ */
+function ChkBox({ tick, doi, children }) {
   return (
     <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-neutral-400">
       <input
@@ -464,19 +703,15 @@ function ChkBox({
   )
 }
 
-function IconBtn({
-  children,
-  onClick,
-  title,
-  disabled,
-  nguyHiem,
-}: {
-  children: React.ReactNode
-  onClick: () => void
-  title: string
-  disabled?: boolean
-  nguyHiem?: boolean
-}) {
+/**
+ * @param {object} props
+ * @param {import('react').ReactNode} props.children
+ * @param {() => void} props.onClick
+ * @param {string} props.title
+ * @param {boolean} [props.disabled]
+ * @param {boolean} [props.nguyHiem]
+ */
+function IconBtn({ children, onClick, title, disabled, nguyHiem }) {
   return (
     <button
       type="button"

@@ -1,29 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import type { PhanTuDaChon } from '@/lib/kich-ban/chon-phan-tu'
 
 /**
  * Ô nhập selector kèm nút ◎ để bấm chọn trực tiếp phần tử trên cửa sổ Chrome.
  * Sau khi chọn, hiện thông tin phần tử và các selector thay thế để bạn cân
  * giữa "ngắn gọn" và "bền khi site đổi layout".
+ *
+ * @param {object} props
+ * @param {string} props.giaTri
+ * @param {(v: string) => void} props.doi
+ * @param {string} [props.nhan]
+ * @param {string} [props.goiY]
+ * @param {boolean} [props.batBuoc]
  */
-export function OSelector({
-  giaTri,
-  doi,
-  nhan = 'Selector',
-  goiY,
-  batBuoc,
-}: {
-  giaTri: string
-  doi: (v: string) => void
-  nhan?: string
-  goiY?: string
-  batBuoc?: boolean
-}) {
+export function OSelector({ giaTri, doi, nhan = 'Selector', goiY, batBuoc }) {
   const [dangChon, setDangChon] = useState(false)
-  const [phanTu, setPhanTu] = useState<PhanTuDaChon | null>(null)
-  const [loi, setLoi] = useState<string | null>(null)
+  /** Phần tử vừa chọn được — kiểu PhanTuDaChon trong lib/kich-ban/chon-phan-tu.js */
+  const [phanTu, setPhanTu] = useState(null)
+  const [loi, setLoi] = useState(null)
 
   const chon = async () => {
     setDangChon(true)
@@ -88,22 +83,30 @@ export function OSelector({
           </div>
 
           {phanTu.goiY.length > 1 && (
-            <div className="flex flex-wrap items-center gap-1">
-              <span className="text-neutral-500">Chọn cách khác:</span>
-              {phanTu.goiY.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => doi(s)}
-                  className={`rounded border px-1.5 py-0.5 font-mono ${
-                    s === giaTri
-                      ? 'border-sky-600 bg-sky-950 text-sky-300'
-                      : 'border-neutral-700 text-neutral-400 hover:border-neutral-500'
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
+            <div className="space-y-1">
+              <span className="text-neutral-500">
+                Các selector cùng trỏ tới nó — số trong ngoặc là số phần tử nó khớp (cần nhiều dòng cho
+                “Lấy bảng”, cần đúng 1 cho “Bấm”/“Điền”):
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {phanTu.goiY.map((g) => (
+                  <button
+                    key={g.sel}
+                    type="button"
+                    onClick={() => doi(g.sel)}
+                    className={`rounded border px-1.5 py-0.5 font-mono ${
+                      g.sel === giaTri
+                        ? 'border-sky-600 bg-sky-950 text-sky-300'
+                        : 'border-neutral-700 text-neutral-400 hover:border-neutral-500'
+                    }`}
+                  >
+                    {g.sel}
+                    <span className={g.soKhop === 1 ? 'ml-1 text-neutral-500' : 'ml-1 text-amber-500'}>
+                      ({g.soKhop})
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
