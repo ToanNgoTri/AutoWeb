@@ -214,11 +214,19 @@ phần còn lại (`Tempo.spotlight` trong `lib/tvpl/pace.js`), nên nhìn là b
 ## Đóng gói mang sang máy khác
 
 ```bash
-npm run dong-goi                       # gói macOS (mặc định), nhúng Node
-npm run dong-goi -- --windows          # gói Windows x64, nhúng Node — đóng được TỪ máy Mac
-npm run dong-goi -- --khong-node       # gói nhỏ hơn, máy đích phải có Node >= 20
-cd dist-offline && zip -qr tvpl-nghidinh-mac.zip tvpl-nghidinh-mac
+npm run dong-goi:mac                   # gói macOS
+npm run dong-goi:win                   # gói Windows x64 — đóng được TỪ máy Mac
+bash scripts/dong-goi.sh --help        # xem đủ cờ
+
+# đặt gói ở chỗ khác (tự tạo thư mục, chấp nhận khoảng trắng trong đường dẫn)
+bash scripts/dong-goi.sh --windows --ra /Volumes/USB
+bash scripts/dong-goi.sh --khong-node  # không nhúng Node, máy đích phải có Node >= 20
 ```
+
+Cờ nhận mọi biến thể (`--windows`, `-windows`, `windows`, `win`, `WIN`, `-w`); cờ sai thì in bảng hướng
+dẫn thay vì chỉ báo một dòng. Có hai script `dong-goi:mac` / `dong-goi:win` vì
+`npm run dong-goi --windows` (thiếu `--`) khiến **npm ăn mất cờ và lặng lẽ đóng gói macOS** — script giờ
+in `▶ Đóng gói cho: <hệ>` ngay dòng đầu để phát hiện chuyện đó.
 
 | Gói | Kích thước | Launcher | Máy đích |
 |---|---|---|---|

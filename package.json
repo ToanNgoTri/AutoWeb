@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "dong-goi": "bash scripts/dong-goi.sh"
+    "dong-goi": "bash scripts/dong-goi.sh",
+    "dong-goi:mac": "bash scripts/dong-goi.sh --mac",
+    "dong-goi:win": "bash scripts/dong-goi.sh --windows"
   },
   "dependencies": {
     "next": "16.3.0",

@@ -12,14 +12,33 @@ App điều khiển Chrome thật thao tác trên website theo **kịch bản b�
 Trên máy đã có sẵn project (máy này **cần mạng một lần** để tải Node runtime về nhúng kèm):
 
 ```bash
-# gói cho macOS
-npm run dong-goi
-cd dist-offline && zip -qr tvpl-nghidinh-mac.zip tvpl-nghidinh-mac
-
-# gói cho Windows 64-bit
-npm run dong-goi -- --windows
-cd dist-offline && zip -qr tvpl-nghidinh-windows.zip tvpl-nghidinh-windows
+npm run dong-goi:mac     # gói cho macOS
+npm run dong-goi:win     # gói cho Windows 64-bit
 ```
+
+Gói ra `dist-offline/tvpl-nghidinh-mac` hoặc `…-windows`. Nén lại theo dòng mà script in ra ở cuối.
+
+**Đóng gói ra chỗ khác** — ví dụ ghi thẳng vào USB, khỏi phải copy hai lần:
+
+```bash
+bash scripts/dong-goi.sh --windows --ra /Volumes/USB
+bash scripts/dong-goi.sh --mac --ra ~/Desktop
+```
+
+Thư mục chưa có thì script tự tạo. Đường dẫn có khoảng trắng cũng được (nhớ đặt trong ngoặc kép).
+
+⚠️ **Nếu gọi qua `npm run dong-goi` thì cờ phải có `--` đứng trước:**
+
+```bash
+npm run dong-goi -- --windows        # ĐÚNG
+npm run dong-goi --windows           # SAI — npm ăn mất cờ, bạn nhận gói macOS mà không hay
+```
+
+Dùng `npm run dong-goi:win` thì không phải nhớ chuyện này. Script cũng in dòng
+`▶ Đóng gói cho: windows` ngay từ đầu để bạn kiểm được mình đang đóng gói cho hệ nào.
+
+Cờ viết kiểu nào cũng nhận: `--windows`, `-windows`, `windows`, `win`, `WIN`, `-w`.
+Gõ `bash scripts/dong-goi.sh --help` để xem đủ.
 
 | Gói | Kích thước | Máy đích |
 |---|---|---|

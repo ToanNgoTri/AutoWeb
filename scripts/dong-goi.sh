@@ -16,14 +16,86 @@ cd "$(dirname "$0")/.."
 GOC="$(pwd)"
 NHUNG_NODE=1
 HDH="mac"
-for arg in "$@"; do
-  case "$arg" in
-    --windows) HDH="windows" ;;
-    --khong-node) NHUNG_NODE=0 ;;
-    *) echo "✗ Cờ không hiểu: $arg"; exit 1 ;;
+THU_MUC_RA=""
+
+huong_dan() {
+  cat <<'HELP'
+Cách dùng:
+  npm run dong-goi                  gói cho macOS
+  npm run dong-goi:win              gói cho Windows 64-bit
+  bash scripts/dong-goi.sh [cờ...]
+
+Cờ — viết kiểu nào cũng nhận (--windows, -windows, windows, win, WIN):
+  --windows            đóng gói cho Windows 64-bit
+  --mac                đóng gói cho macOS (mặc định)
+  --khong-node         không nhúng Node (máy đích phải tự có Node >= 20)
+  --ra <thư mục>       đặt gói vào thư mục khác, ví dụ:  --ra /Volumes/USB
+  --help               in bảng này
+
+Ví dụ đóng gói Windows ra thẳng USB:
+  bash scripts/dong-goi.sh --windows --ra /Volumes/USB
+
+QUAN TRỌNG khi chạy qua npm: phải có -- trước cờ.
+  ĐÚNG :  npm run dong-goi -- --windows
+  SAI  :  npm run dong-goi --windows      <- npm ăn mất cờ, bạn nhận gói macOS
+Dùng  npm run dong-goi:win  thì không phải nhớ chuyện này.
+HELP
+}
+
+# bash 3.2 (bản mặc định của macOS) không có ${1,,} nên hạ chữ bằng tr.
+while [[ $# -gt 0 ]]; do
+  goc_arg="$1"
+  co="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+  case "$co" in
+    --windows|-windows|windows|--win|-win|win|-w)
+      HDH="windows" ;;
+    --mac|-mac|mac|--macos|-macos|macos|-m)
+      HDH="mac" ;;
+    --khong-node|-khong-node|khong-node|--khong_node|--no-node|-no-node)
+      NHUNG_NODE=0 ;;
+    --ra|-ra|--out|-out|-o)
+      shift
+      [[ $# -gt 0 ]] || { echo "✗ Cờ --ra cần kèm đường dẫn thư mục."; exit 1; }
+      THU_MUC_RA="$1" ;;
+    --ra=*|--out=*)
+      THU_MUC_RA="${goc_arg#*=}" ;;
+    --help|-h|-help|help)
+      huong_dan; exit 0 ;;
+    *)
+      echo "✗ Không hiểu cờ: $goc_arg"
+      echo
+      huong_dan
+      exit 1 ;;
   esac
+  shift
 done
-RA="$GOC/dist-offline/tvpl-nghidinh-$HDH"
+
+# Thư mục đích: mặc định dist-offline trong project, hoặc chỗ bạn chỉ định.
+if [[ -n "$THU_MUC_RA" ]]; then
+  # bash không tự mở rộng ~ khi nó nằm trong biến
+  case "$THU_MUC_RA" in
+    "~") THU_MUC_RA="$HOME" ;;
+    "~/"*) THU_MUC_RA="$HOME/${THU_MUC_RA#\~/}" ;;
+  esac
+  mkdir -p "$THU_MUC_RA" || { echo "✗ Không tạo được thư mục: $THU_MUC_RA"; exit 1; }
+  THU_MUC_RA="$(cd "$THU_MUC_RA" && pwd)"
+else
+  THU_MUC_RA="$GOC/dist-offline"
+fi
+
+RA="$THU_MUC_RA/tvpl-nghidinh-$HDH"
+
+# Bước dưới có `rm -rf "$RA"` nên chặn mấy chỗ nguy hiểm.
+case "$RA" in
+  "/"*/) echo "✗ Đường dẫn đích không hợp lệ: $RA"; exit 1 ;;
+esac
+if [[ "$RA" == "/" || "$RA" == "$HOME" || "$THU_MUC_RA" == "/" ]]; then
+  echo "✗ Không đóng gói trực tiếp vào $RA"; exit 1
+fi
+
+echo "▶ Đóng gói cho: $HDH"
+echo "  Sẽ ghi vào: $RA"
+echo
 
 # Bản Node nhúng kèm lấy từ nodejs.org: bản Homebrew phụ thuộc dylib trong
 # /opt/homebrew nên copy sang máy sạch là chết.
@@ -250,5 +322,6 @@ else
   echo "    cd \"$RA\" && ./runtime/node -v && ./runtime/node khoi-dong.mjs"
 fi
 echo
+TEN_GOI="$(basename "$RA")"
 echo "  Nén để mang đi:"
-echo "    cd dist-offline && zip -qr $(basename "$RA").zip $(basename "$RA")"
+echo "    cd \"$THU_MUC_RA\" && zip -qr $TEN_GOI.zip $TEN_GOI"
