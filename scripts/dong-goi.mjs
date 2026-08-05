@@ -10,7 +10,7 @@
  *   node scripts/dong-goi.mjs --help
  */
 import { spawn } from 'node:child_process'
-import { chmod, cp, mkdir, mkdtemp, readdir, readlink, rm, stat, writeFile } from 'node:fs/promises'
+import { chmod, cp, mkdir, mkdtemp, readFile, readdir, readlink, rm, stat, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
@@ -365,6 +365,24 @@ const BAT_DAU_MAC = `tvpl-nghidinh — bắt đầu từ đây (macOS)
 
 Hướng dẫn đầy đủ: mở file  HUONG-DAN.md
 `
+
+/**
+ * Next copy nguyên package.json của project vào bản standalone, nên gói vẫn
+ * quảng cáo `npm run dev` / `npm run build` — mà gói KHÔNG chạy được mấy lệnh
+ * đó (thiếu app/, next.config, tailwind, @next/swc). Người dùng gõ vào sẽ nhận
+ * một lỗi khó hiểu. Thay bằng script đúng với thứ gói làm được.
+ */
+{
+  const f = join(RA, 'package.json')
+  const pkg = JSON.parse(await readFile(f, 'utf8'))
+  pkg.scripts = { start: 'node khoi-dong.mjs' }
+  delete pkg.devDependencies
+  pkg['//'] =
+    'Day la GOI DA DONG SAN, khong phai project. Chay bang chay.bat / chay.command, ' +
+    'hoac "npm start". Muon sua code thi dung project goc.'
+  await writeFile(f, JSON.stringify(pkg, null, 2) + '\n', 'utf8')
+  console.log('  ✓ package.json: chỉ còn script "start" (gói không chạy được dev/build)')
+}
 
 await writeFile(
   join(RA, 'BAT-DAU-TU-DAY.txt'),
