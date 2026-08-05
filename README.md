@@ -214,10 +214,28 @@ phần còn lại (`Tempo.spotlight` trong `lib/tvpl/pace.js`), nên nhìn là b
 ## Đóng gói mang sang máy khác
 
 ```bash
-npm run dong-goi                       # nhúng luôn Node runtime (mặc định)
+npm run dong-goi                       # gói macOS (mặc định), nhúng Node
+npm run dong-goi -- --windows          # gói Windows x64, nhúng Node — đóng được TỪ máy Mac
 npm run dong-goi -- --khong-node       # gói nhỏ hơn, máy đích phải có Node >= 20
-cd dist-offline && zip -qr tvpl-nghidinh.zip tvpl-nghidinh
+cd dist-offline && zip -qr tvpl-nghidinh-mac.zip tvpl-nghidinh-mac
 ```
+
+| Gói | Kích thước | Launcher | Máy đích |
+|---|---|---|---|
+| `tvpl-nghidinh-mac` | 164 MB | `chay.command` | macOS cùng loại chip |
+| `tvpl-nghidinh-windows` | 140 MB | `chay.bat` (CRLF) | Windows 64-bit |
+
+Logic khởi động nằm trong **`scripts/khoi-dong.mjs`** — dùng chung cả hai hệ: đọc `.env.local`, kiểm
+Chrome, kiểm DNS, bật `server.js`, mở trình duyệt. Hai launcher chỉ là vỏ mỏng tìm ra Node rồi gọi nó.
+Trước đây logic này viết bằng bash trong `chay.command` nên Windows không chạy được, và nó dò Chrome
+bằng code riêng — hai nguồn dò khác nhau đã gây ra một lỗi thật.
+
+Việc tìm Chrome gom vào **`lib/tvpl/tim-chrome.js`** (macOS/Windows/Linux), app và launcher dùng chung.
+File này được `dong-goi.sh` copy vào gói dưới tên `.mjs` — bộ dò phụ thuộc của Next không gom nó, thiếu
+là mất luôn bước kiểm Chrome lúc khởi động.
+
+⚠️ **Gói Windows được cross-build từ macOS nên chưa chạy thử trên Windows thật.** Chạy `chay.bat` một
+lần trên máy Windows trước khi phát cho người khác.
 
 Ra `dist-offline/tvpl-nghidinh/` (**~164 MB** có Node, ~59 MB không Node). Copy sang máy khác, bấm đúp
 **`chay.command`** là chạy — không `npm install`, không cài Node.

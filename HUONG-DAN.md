@@ -9,53 +9,76 @@ App điều khiển Chrome thật thao tác trên website theo **kịch bản b�
 
 ### 1.1 Chuyển gói sang máy đích
 
-Trên máy đã có sẵn project:
+Trên máy đã có sẵn project (máy này **cần mạng một lần** để tải Node runtime về nhúng kèm):
 
 ```bash
+# gói cho macOS
 npm run dong-goi
-cd dist-offline && zip -qr tvpl-nghidinh.zip tvpl-nghidinh
+cd dist-offline && zip -qr tvpl-nghidinh-mac.zip tvpl-nghidinh-mac
+
+# gói cho Windows 64-bit
+npm run dong-goi -- --windows
+cd dist-offline && zip -qr tvpl-nghidinh-windows.zip tvpl-nghidinh-windows
 ```
 
-Copy `tvpl-nghidinh.zip` (~164 MB) sang máy đích bằng **USB, AirDrop, ổ mạng nội bộ** — cách nào cũng
-được, không cần Internet. Giải nén ra một thư mục bất kỳ (Desktop cũng được).
+| Gói | Kích thước | Máy đích |
+|---|---|---|
+| `tvpl-nghidinh-mac` | 164 MB (zip ~56 MB) | macOS, **cùng loại chip** với máy đóng gói |
+| `tvpl-nghidinh-windows` | 140 MB | Windows 64-bit |
+
+Gói Windows đóng được **từ máy Mac** — không cần máy Windows để đóng gói.
+Thêm `--khong-node` nếu máy đích đã có Node ≥ 20 (gói nhỏ hơn nhiều).
+
+Copy file zip sang máy đích bằng **USB, AirDrop, ổ mạng nội bộ** — cách nào cũng được, không cần
+Internet. Giải nén ra thư mục bất kỳ (Desktop cũng được).
 
 Trong thư mục có:
 
 ```
-chay.command            ← bấm đúp cái này để chạy
-BAT-DAU-TU-DAY.txt      ← 4 dòng cần biết ngay
-HUONG-DAN.md            ← file bạn đang đọc
-runtime/node            ← Node nhúng kèm, không phải cài
-node_modules/           ← thư viện đã gom đủ, không phải npm install
-kich-ban/               ← kịch bản dạng JSON
-.env.local              ← tài khoản đăng nhập
-server.js  .next/       ← bản build của app
+chay.command  /  chay.bat   ← bấm đúp cái này để chạy (mac / Windows)
+BAT-DAU-TU-DAY.txt          ← 5 dòng cần biết ngay
+HUONG-DAN.md                ← file bạn đang đọc
+khoi-dong.mjs               ← script khởi động (dùng chung cả hai hệ)
+runtime/node  /  node.exe   ← Node nhúng kèm, không phải cài
+node_modules/               ← thư viện đã gom đủ, không phải npm install
+lib/tvpl/tim-chrome.mjs     ← phần dò Chrome, để báo lỗi ngay lúc khởi động
+kich-ban/                   ← kịch bản dạng JSON
+.env.local                  ← tài khoản đăng nhập + CHROME_PATH nếu cần
+server.js  .next/           ← bản build của app
 ```
 
 ### 1.2 Chạy
 
-Bấm đúp **`chay.command`**. Một cửa sổ Terminal mở ra, rồi trình duyệt tự mở
-`http://localhost:3000`.
+| | macOS | Windows |
+|---|---|---|
+| Bấm đúp | `chay.command` | `chay.bat` |
+| Cửa sổ mở ra | Terminal | Command Prompt |
+| Đổi cổng | `PORT=4000 ./chay.command` | `set PORT=4000 && chay.bat` |
+| Dừng | `Ctrl+C` | `Ctrl+C` |
 
-Đổi cổng nếu 3000 đang bận: mở Terminal, `cd` vào thư mục rồi
+Trình duyệt tự mở `http://localhost:3000` sau khoảng 2 giây.
 
-```bash
-PORT=4000 ./chay.command
+Dòng đầu tiên nó in ra cho biết đang dùng Chrome nào:
+
+```
+ℹ Chrome: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+ℹ Chrome: C:\Program Files\Google\Chrome\Application\chrome.exe
 ```
 
-Dừng app: bấm `Ctrl+C` trong cửa sổ Terminal đó, hoặc đóng cửa sổ.
+### 1.3 Nếu hệ điều hành không cho mở
 
-### 1.3 Nếu macOS không cho mở
+**Windows** — Defender SmartScreen báo *"Windows protected your PC"*:
+bấm **More info** → **Run anyway**. Chỉ một lần.
+Nếu file bị chặn sâu hơn: chuột phải `chay.bat` → **Properties** → tick **Unblock** → **OK**.
 
-Gói đi qua mạng (email, Drive, tải về) sẽ bị macOS gắn cờ cách ly, và Finder báo *"không mở được vì
-không rõ nhà phát triển"*. Hai cách:
+**macOS** — Finder báo *"không mở được vì không rõ nhà phát triển"* (xảy ra khi gói đi qua email/Drive):
 
-- **Cách nhanh:** chuột phải vào `chay.command` → **Open** → **Open**. Chỉ phải làm một lần.
+- **Cách nhanh:** chuột phải `chay.command` → **Open** → **Open**. Chỉ một lần.
 - **Cách chắc:** mở Terminal, gõ `xattr -cr ` (có dấu cách ở cuối), **kéo thả thư mục gói** vào cửa sổ
-  Terminal, rồi Enter. Lệnh sẽ thành:
+  Terminal, rồi Enter:
 
   ```bash
-  xattr -cr /Users/ten-ban/Desktop/tvpl-nghidinh
+  xattr -cr /Users/ten-ban/Desktop/tvpl-nghidinh-mac
   ```
 
 Chuyển qua USB hoặc AirDrop thường **không** bị cờ này.
@@ -64,8 +87,8 @@ Chuyển qua USB hoặc AirDrop thường **không** bị cờ này.
 
 | Cần | Vì sao |
 |---|---|
-| **macOS cùng loại chip** với máy đóng gói (Apple Silicon ↔ Apple Silicon) | Node nhúng kèm là binary biên dịch theo kiến trúc |
-| **Google Chrome** trong `/Applications` | App điều khiển Chrome thật, vì thuvienphapluat.vn có Cloudflare chặn bot. Không có cách thay thế. Chrome ở chỗ khác thì thêm `CHROME_PATH=/đường/dẫn` vào `.env.local` |
+| **Hệ điều hành khớp với gói** — gói `-mac` cho macOS cùng loại chip (Apple Silicon ↔ Apple Silicon), gói `-windows` cho Windows 64-bit | Node nhúng kèm là file thực thi biên dịch theo hệ điều hành + kiến trúc |
+| **Google Chrome** | App điều khiển Chrome thật, vì thuvienphapluat.vn có Cloudflare chặn bot. Không có cách thay thế. Xem **1.6** nếu báo lỗi không tìm thấy Chrome |
 
 Không cần cài Node. Không cần `npm install`. Không cần quyền admin.
 
@@ -86,6 +109,90 @@ server của họ.
 
 **Muốn dùng dữ liệu ở máy offline:** chạy trên máy có mạng → bấm **Tải CSV** ở bảng kết quả → mang file
 CSV sang máy offline mở bằng Excel / Numbers. `chay.command` cũng cảnh báo sẵn nếu không kết nối được.
+
+### 1.6 Lỗi "Không tìm thấy Google Chrome" / CHROME_PATH
+
+**Lỗi này không liên quan gì tới mạng** — nó chỉ là dò đường dẫn trên máy. Nên sửa được hoàn toàn khi
+máy bị cắt mạng. Chỉ *cài Chrome* mới cần mạng, nếu máy chưa có Chrome.
+
+App tự tìm ở 15 chỗ trên Windows và 10 chỗ trên macOS (Chrome, Chrome Beta, Chrome Dev, Canary,
+Chromium). Nếu Chrome của bạn nằm chỗ khác thì phải chỉ đường.
+
+#### Bước 1 — tìm Chrome đang ở đâu
+
+**Windows** — mở Command Prompt (`Win+R` → gõ `cmd` → Enter):
+
+```bat
+reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe" /ve
+```
+
+Không ra thì thử:
+
+```bat
+where /r "C:\Program Files" chrome.exe
+where /r "%LOCALAPPDATA%" chrome.exe
+```
+
+**macOS** — mở Terminal (`Cmd+Space` → gõ `Terminal`):
+
+```bash
+ls -d /Applications/*.app ~/Applications/*.app 2>/dev/null | grep -i chrom
+```
+
+Không ra thì hỏi thẳng macOS:
+
+```bash
+osascript -e 'POSIX path of (path to application "Google Chrome")'
+```
+
+Vẫn không ra thì máy chưa có Chrome — phải cài từ https://google.com/chrome (cần mạng một lần).
+
+#### Bước 2 — ghi đường dẫn vào `.env.local`
+
+File `.env.local` nằm **cùng thư mục với `chay.bat` / `chay.command`**.
+
+| | Mở file thế nào | Không thấy file? |
+|---|---|---|
+| **Windows** | Chuột phải → **Open with** → **Notepad** | View → tick **Hidden items**, và bỏ tick **Hide extensions** |
+| **macOS** | Mở bằng **TextEdit** | Bấm `Cmd+Shift+.` để hiện file ẩn |
+
+Thêm **một dòng**, đúng cú pháp hệ điều hành của bạn:
+
+```
+# Windows
+CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
+
+# macOS
+CHROME_PATH=/Applications/Google Chrome.app
+```
+
+Bốn điều giúp khỏi sai:
+
+- **Windows:** trỏ vào `chrome.exe`, hoặc chỉ trỏ vào thư mục `...\Chrome\Application` cũng được —
+  app tự thêm `chrome.exe`.
+- **macOS:** trỏ vào `.app` là đủ — app tự tìm file thực thi bên trong.
+- **Không cần dấu ngoặc kép**, kể cả khi đường dẫn có khoảng trắng (`Program Files` không sao). Có
+  ngoặc kép cũng vẫn chạy.
+- **Không có `.env.local`?** Tạo file mới tên đúng `.env.local` (dấu chấm ở đầu, **không** có `.txt`
+  ở cuối — Notepad hay tự thêm, chọn *Save as type: All Files*).
+
+#### Bước 3 — lưu file rồi bấm đúp lại
+
+Chạy đúng thì dòng đầu in ra Chrome nó dùng:
+
+```
+ℹ Chrome: C:\Program Files\Google\Chrome\Application\chrome.exe
+```
+
+Nếu `CHROME_PATH` bạn đặt bị sai, nó **nói rõ rồi mới dùng tạm cái khác**, không lặng lẽ bỏ qua:
+
+```
+⚠ CHROME_PATH="C:\Sai\chrome.exe" không dùng được (không thấy C:\Sai\chrome.exe).
+  Dùng tạm: C:\Program Files\Google\Chrome\Application\chrome.exe
+```
+
+Và nếu không tìm được Chrome nào, nó **liệt kê đủ mọi đường dẫn đã tìm** rồi in lại 3 bước trên, kèm
+lệnh đúng cho hệ điều hành đang chạy.
 
 ---
 
@@ -296,7 +403,10 @@ Kịch bản chỉ ghi `{{TVPL_PASSWORD}}`, nên chia sẻ file JSON không lộ
 | Cột rỗng chỉ ở vài dòng | Có thể dữ liệu **thật sự không có** trên trang đó, không phải lỗi. Mở tay trang đó trong Chrome kiểm chứng |
 | Cột Hiệu lực / Tình trạng hiện *"Đã biết"* | Nội dung này thuvienphapluat.vn chỉ mở cho **gói trả phí**; đăng nhập thường không đủ |
 | Bước *Đăng nhập* lỗi | Sai tài khoản trong `.env.local`, hoặc site đổi form. Xem thông báo lỗi — app in nguyên văn thông báo của site |
-| App không mở, cổng 3000 bận | `PORT=4000 ./chay.command` |
+| *"Không tìm thấy Google Chrome"* / đặt `CHROME_PATH` mà vẫn lỗi | Xem mục **1.6**. Nhớ: `.env.local` phải nằm **cùng thư mục với `chay.bat` / `chay.command`**; Windows trỏ vào `chrome.exe`, macOS trỏ vào `.app` |
+| App không mở, cổng 3000 bận | macOS `PORT=4000 ./chay.command` · Windows `set PORT=4000 && chay.bat` |
+| Windows: cửa sổ đen hiện rồi tắt ngay | Mở Command Prompt, `cd` vào thư mục rồi chạy `chay.bat` để đọc được lỗi |
+| Windows: chữ tiếng Việt trong cửa sổ bị lỗi ô vuông | Chỉ là hiển thị của Command Prompt, app vẫn chạy đúng. Đọc thông báo trong trình duyệt thay vì trong cửa sổ đen |
 | Chrome mở nhưng app báo không nối được | Đóng hết cửa sổ Chrome do app bật (nút **Đóng Chrome**), rồi chạy lại |
 | Bấm Chạy báo lỗi mạng | Máy không có Internet. Xem lại mục 1.5 |
 
@@ -309,6 +419,8 @@ Kịch bản chỉ ghi `{{TVPL_PASSWORD}}`, nên chia sẻ file JSON không lộ
 - **Mật khẩu trong gói.** Nếu gói được đóng kèm `.env.local`, mật khẩu nằm trong đó ở dạng đọc được.
   Đừng gửi gói cho người không nên biết mật khẩu. Muốn tránh: xoá dòng `cp .env.local` trong
   `scripts/dong-goi.sh` rồi tự tạo file ở máy đích.
+- **Gói Windows được đóng từ máy Mac.** Chạy thử `chay.bat` một lần trên máy Windows trước khi phát cho
+  người khác.
 - **"Chạy JS" là cửa sau thật** — nó thực thi mã JS trong trang đang mở. Chỉ chạy kịch bản bạn tự viết
   hoặc đã đọc qua; đừng chạy file JSON người khác gửi mà chưa xem.
 - **Dùng để tra cứu.** `robots.txt` của thuvienphapluat.vn cho phép truy cập nhưng bảo lưu quyền
