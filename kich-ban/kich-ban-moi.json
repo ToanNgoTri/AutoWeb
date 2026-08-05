@@ -1,0 +1,55 @@
+{
+  "ten": "Kịch bản mới",
+  "moTa": "",
+  "buoc": [
+    {
+      "id": "n6x0j7h3",
+      "nhan": "Mở trang",
+      "hanhDong": {
+        "loai": "mo-trang",
+        "url": "http://localhost:3001/",
+        "choSelector": "body"
+      }
+    },
+    {
+      "id": "bmntuvek",
+      "hanhDong": {
+        "loai": "mo-trang",
+        "url": "http://localhost:3001/population"
+      }
+    },
+    {
+      "id": "bgel3sm2",
+      "hanhDong": {
+        "loai": "chon",
+        "selector": "select:first-of-type",
+        "giaTri": "TENCHA"
+      }
+    },
+    {
+      "id": "b2cur7ou",
+      "hanhDong": {
+        "loai": "dien",
+        "selector": "input:first-of-type",
+        "giaTri": "N LINH",
+        "tungKyTu": true
+      }
+    },
+    {
+      "id": "b9smmnhb",
+      "hanhDong": {
+        "loai": "bam",
+        "selector": "button:nth-of-type(2)",
+        "choDieuHuong": false
+      }
+    },
+    {
+      "id": "b65v4a3v",
+      "hanhDong": {
+        "loai": "cho",
+        "selector": "tbody",
+        "trangThai": "hien"
+      }
+    }
+  ]
+}
