@@ -214,14 +214,20 @@ phần còn lại (`Tempo.spotlight` trong `lib/tvpl/pace.js`), nên nhìn là b
 ## Đóng gói mang sang máy khác
 
 ```bash
-npm run dong-goi:mac                   # gói macOS
-npm run dong-goi:win                   # gói Windows x64 — đóng được TỪ máy Mac
-bash scripts/dong-goi.sh --help        # xem đủ cờ
+npm run dong-goi:mac                        # gói macOS
+npm run dong-goi:win                        # gói Windows x64
+node scripts/dong-goi.mjs --help            # xem đủ cờ
 
 # đặt gói ở chỗ khác (tự tạo thư mục, chấp nhận khoảng trắng trong đường dẫn)
-bash scripts/dong-goi.sh --windows --ra /Volumes/USB
-bash scripts/dong-goi.sh --khong-node  # không nhúng Node, máy đích phải có Node >= 20
+node scripts/dong-goi.mjs --windows --ra /Volumes/USB
+node scripts/dong-goi.mjs --windows --ra D:\USB
+node scripts/dong-goi.mjs --khong-node      # không nhúng Node, máy đích phải có Node >= 20
 ```
+
+Script đóng gói là **`scripts/dong-goi.mjs`** viết bằng Node, chạy được **từ cả Windows lẫn macOS**, và
+đóng được gói cho hệ còn lại. Bản `dong-goi.sh` cũ đã bỏ: nó là bash nên báo
+`'bash' is not recognized` khi đóng gói từ máy Windows. Giải nén Node runtime dùng `tar -xf` cho cả
+`.tar.gz` và `.zip` — bsdtar có sẵn trên macOS và Windows 10+.
 
 Cờ nhận mọi biến thể (`--windows`, `-windows`, `windows`, `win`, `WIN`, `-w`); cờ sai thì in bảng hướng
 dẫn thay vì chỉ báo một dòng. Có hai script `dong-goi:mac` / `dong-goi:win` vì
@@ -239,7 +245,7 @@ Trước đây logic này viết bằng bash trong `chay.command` nên Windows k
 bằng code riêng — hai nguồn dò khác nhau đã gây ra một lỗi thật.
 
 Việc tìm Chrome gom vào **`lib/tvpl/tim-chrome.js`** (macOS/Windows/Linux), app và launcher dùng chung.
-File này được `dong-goi.sh` copy vào gói dưới tên `.mjs` — bộ dò phụ thuộc của Next không gom nó, thiếu
+File này được `dong-goi.mjs` copy vào gói dưới tên `.mjs` — bộ dò phụ thuộc của Next không gom nó, thiếu
 là mất luôn bước kiểm Chrome lúc khởi động.
 
 ⚠️ **Gói Windows được cross-build từ macOS nên chưa chạy thử trên Windows thật.** Chạy `chay.bat` một
@@ -294,7 +300,8 @@ app/page.js                  trình soạn kịch bản + live view + kết qu�
 app/components/              the-buoc.js (form một bước) · danh-sach-buoc.js (list + điểm chèn, đệ quy)
                              chen-buoc.js (điểm "+") · khoi-phuc-hoi.js · o-selector.js (ô + ◎)
                              boi-canh.js (context trạng thái, khoá theo id bước)
-scripts/dong-goi.sh          đóng gói thành thư mục tự chứa
+scripts/dong-goi.mjs         đóng gói thành thư mục tự chứa (Node, chạy trên Windows + macOS)
+scripts/khoi-dong.mjs        script khởi động trong gói (Node, cả hai hệ)
 scripts/*.mjs                script dò DOM, đo Cloudflare, test bộ chọn (tài liệu sống)
 kich-ban/*.json              kịch bản đã lưu
 ```

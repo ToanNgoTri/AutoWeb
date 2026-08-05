@@ -9,36 +9,51 @@ App điều khiển Chrome thật thao tác trên website theo **kịch bản b�
 
 ### 1.1 Chuyển gói sang máy đích
 
-Trên máy đã có sẵn project (máy này **cần mạng một lần** để tải Node runtime về nhúng kèm):
+Trên máy đã có sẵn project (máy này **cần mạng một lần** để tải Node runtime về nhúng kèm).
+Chạy được **từ cả máy Windows lẫn máy Mac** — script đóng gói viết bằng Node, không cần `bash`:
 
-```bash
-npm run dong-goi:mac     # gói cho macOS
-npm run dong-goi:win     # gói cho Windows 64-bit
+```
+npm run dong-goi:mac     gói cho macOS
+npm run dong-goi:win     gói cho Windows 64-bit
 ```
 
-Gói ra `dist-offline/tvpl-nghidinh-mac` hoặc `…-windows`. Nén lại theo dòng mà script in ra ở cuối.
+Đóng gói **cho Windows, từ máy Windows** thì mở **Command Prompt** hoặc **PowerShell** trong thư mục
+project rồi chạy `npm run dong-goi:win`. Đừng dùng lệnh có `bash` — Windows không có `bash` và sẽ báo
+`'bash' is not recognized as an internal or external command`.
 
-**Đóng gói ra chỗ khác** — ví dụ ghi thẳng vào USB, khỏi phải copy hai lần:
+Gói ra `dist-offline\tvpl-nghidinh-windows` (hoặc `…-mac`). Nén lại theo dòng mà script in ra ở cuối —
+nó tự đưa lệnh đúng cho hệ bạn đang dùng (`Compress-Archive` trên Windows, `zip` trên macOS).
 
-```bash
-bash scripts/dong-goi.sh --windows --ra /Volumes/USB
-bash scripts/dong-goi.sh --mac --ra ~/Desktop
+**Đóng gói ra chỗ khác** — ví dụ ghi thẳng vào USB, khỏi copy hai lần:
+
+```
+node scripts/dong-goi.mjs --windows --ra D:\USB
+node scripts/dong-goi.mjs --mac --ra ~/Desktop
 ```
 
-Thư mục chưa có thì script tự tạo. Đường dẫn có khoảng trắng cũng được (nhớ đặt trong ngoặc kép).
+Thư mục chưa có thì script tự tạo. Đường dẫn có khoảng trắng cũng được (đặt trong ngoặc kép).
 
 ⚠️ **Nếu gọi qua `npm run dong-goi` thì cờ phải có `--` đứng trước:**
 
-```bash
-npm run dong-goi -- --windows        # ĐÚNG
-npm run dong-goi --windows           # SAI — npm ăn mất cờ, bạn nhận gói macOS mà không hay
+```
+npm run dong-goi -- --windows        ĐÚNG
+npm run dong-goi --windows           SAI — npm ăn mất cờ, bạn nhận gói của hệ đang chạy
 ```
 
-Dùng `npm run dong-goi:win` thì không phải nhớ chuyện này. Script cũng in dòng
-`▶ Đóng gói cho: windows` ngay từ đầu để bạn kiểm được mình đang đóng gói cho hệ nào.
+Dùng `npm run dong-goi:win` thì không phải nhớ chuyện này. Script cũng in ba dòng đầu để bạn kiểm:
+
+```
+▶ Đóng gói cho: windows
+  Sẽ ghi vào: D:\USB\tvpl-nghidinh-windows
+  Đang chạy trên: win32 x64
+```
 
 Cờ viết kiểu nào cũng nhận: `--windows`, `-windows`, `windows`, `win`, `WIN`, `-w`.
-Gõ `bash scripts/dong-goi.sh --help` để xem đủ.
+Gõ `node scripts/dong-goi.mjs --help` để xem đủ.
+
+Một lưu ý khi **đóng gói cho macOS từ máy Windows**: Windows không có khái niệm quyền thực thi, nên
+`chay.command` sẽ mất quyền chạy. Script cảnh báo sẵn; trên máy Mac chạy một lần
+`chmod +x chay.command` là xong.
 
 | Gói | Kích thước | Máy đích |
 |---|---|---|
@@ -437,7 +452,7 @@ Kịch bản chỉ ghi `{{TVPL_PASSWORD}}`, nên chia sẻ file JSON không lộ
 
 - **Mật khẩu trong gói.** Nếu gói được đóng kèm `.env.local`, mật khẩu nằm trong đó ở dạng đọc được.
   Đừng gửi gói cho người không nên biết mật khẩu. Muốn tránh: xoá dòng `cp .env.local` trong
-  `scripts/dong-goi.sh` rồi tự tạo file ở máy đích.
+  `scripts/dong-goi.mjs` rồi tự tạo file ở máy đích.
 - **Gói Windows được đóng từ máy Mac.** Chạy thử `chay.bat` một lần trên máy Windows trước khi phát cho
   người khác.
 - **"Chạy JS" là cửa sau thật** — nó thực thi mã JS trong trang đang mở. Chỉ chạy kịch bản bạn tự viết
