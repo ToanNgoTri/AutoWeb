@@ -76,25 +76,47 @@ else
   echo "▶ 4/5  Bỏ qua Node runtime (--khong-node)"
 fi
 
-echo "▶ 5/5  Tạo script khởi động"
+echo "▶ 5/5  Tạo script khởi động + hướng dẫn"
+[[ -f "$GOC/HUONG-DAN.md" ]] && cp "$GOC/HUONG-DAN.md" "$RA/HUONG-DAN.md"
 cat > "$RA/chay.command" <<'LAUNCHER'
 #!/bin/bash
 # Bấm đúp vào file này để chạy app.
 cd "$(dirname "$0")"
 
-if [[ -x "./runtime/node" ]]; then
+NODE=""
+# Node nhúng kèm có thể bị macOS chặn nếu gói đi qua mạng (cờ com.apple.quarantine),
+# nên thử chạy thật một lần chứ không chỉ kiểm quyền thực thi.
+if [[ -x "./runtime/node" ]] && ./runtime/node -v >/dev/null 2>&1; then
   NODE="./runtime/node"
 elif command -v node >/dev/null 2>&1; then
   NODE="node"
-else
-  echo "✗ Không tìm thấy Node. Gói này được đóng bằng --khong-node nên máy phải cài Node >= 20."
+  echo "ℹ Dùng Node của máy vì Node nhúng kèm không chạy được."
+fi
+
+if [[ -z "$NODE" ]]; then
+  echo "✗ Không chạy được Node."
+  echo
+  echo "  Nếu gói này được tải/gửi qua mạng, macOS đã gắn cờ cách ly. Mở Terminal và chạy:"
+  echo
+  echo "      xattr -cr \"$(pwd)\""
+  echo
+  echo "  rồi bấm đúp lại chay.command. Hoặc cài Node >= 20 từ nodejs.org."
   read -r -p "Enter để đóng..." _ ; exit 1
 fi
 
 if [[ ! -d "/Applications/Google Chrome.app" ]] && [[ -z "${CHROME_PATH:-}" ]]; then
-  echo "✗ Chưa có Google Chrome. App bắt buộc cần Chrome thật để vượt Cloudflare."
-  echo "  Cài Chrome, hoặc đặt CHROME_PATH trong .env.local"
+  echo "✗ Chưa có Google Chrome trong /Applications."
+  echo "  App điều khiển Chrome thật (thuvienphapluat.vn chặn bot), nên đây là bắt buộc."
+  echo "  Cài Chrome, hoặc thêm dòng CHROME_PATH=/duong/dan/toi/Chrome vào file .env.local"
   read -r -p "Enter để đóng..." _ ; exit 1
+fi
+
+# Cảnh báo sớm thay vì để người dùng đợi rồi mới thấy lỗi mạng.
+if ! /usr/bin/nc -z -G 3 thuvienphapluat.vn 443 >/dev/null 2>&1; then
+  echo "⚠ Không kết nối được thuvienphapluat.vn."
+  echo "  Giao diện vẫn mở được và bạn vẫn soạn/lưu kịch bản được, nhưng bấm Chạy sẽ lỗi:"
+  echo "  app đọc dữ liệu trực tiếp từ website nên lúc CHẠY vẫn cần Internet."
+  echo
 fi
 
 PORT="${PORT:-3000}"
@@ -104,48 +126,31 @@ PORT="$PORT" HOSTNAME=127.0.0.1 exec "$NODE" server.js
 LAUNCHER
 chmod +x "$RA/chay.command"
 
-cat > "$RA/DOC-TRUOC-KHI-CHAY.txt" <<'DOCS'
-tvpl-nghidinh — bản đóng gói
-============================
+cat > "$RA/BAT-DAU-TU-DAY.txt" <<'DOCS'
+tvpl-nghidinh — bắt đầu từ đây
+==============================
 
-CÁCH DÙNG
-  Bấm đúp vào "chay.command". Trình duyệt sẽ tự mở http://localhost:3000
-  (Lần đầu macOS có thể chặn: chuột phải vào chay.command → Open → Open.)
+1. Bấm đúp vào  chay.command   → trình duyệt tự mở http://localhost:3000
 
-MÁY ĐÍCH CẦN GÌ
-  1. macOS cùng kiến trúc với máy đóng gói (Apple Silicon / Intel).
-  2. Google Chrome cài trong /Applications  ← BẮT BUỘC, không thay thế được.
-     App điều khiển Chrome thật vì thuvienphapluat.vn có Cloudflare chặn bot.
-  3. KHÔNG cần cài Node, KHÔNG cần npm install (đã nhúng sẵn trong runtime/).
+2. Nếu macOS báo "không mở được vì không rõ nhà phát triển":
+   Chuột phải vào chay.command → Open → Open.
+   Vẫn không được thì mở Terminal, gõ  xattr -cr  rồi kéo thư mục này vào, Enter.
 
-QUAN TRỌNG — VỀ CHUYỆN "KHÔNG CÓ MẠNG"
-  Gói này không cần mạng để CÀI ĐẶT.
-  Nhưng khi CHẠY thì vẫn phải có Internet, vì app đi đọc dữ liệu trực tiếp
-  từ thuvienphapluat.vn. Máy hoàn toàn offline sẽ mở được giao diện nhưng
-  bấm tìm kiếm sẽ báo lỗi mạng.
-  Muốn dùng thật sự offline thì phải đổi thiết kế: chạy sẵn trên máy có mạng,
-  xuất kết quả ra file JSON, rồi mang file đó sang máy offline để đọc.
+3. Máy này cần: macOS cùng loại chip với máy đóng gói, và Google Chrome
+   trong /Applications. KHÔNG cần cài Node, KHÔNG cần npm install.
 
-KỊCH BẢN
-  Kịch bản nằm trong thư mục kich-ban/ dạng JSON. Copy thêm file .json vào đó là
-  app tự thấy trong danh sách "Mở kịch bản đã lưu". Bấm Lưu trong app cũng ghi
-  vào đây.
+4. VỀ MẠNG: gói này không cần mạng để CÀI, nhưng lúc CHẠY vẫn cần Internet
+   vì app đọc dữ liệu trực tiếp từ thuvienphapluat.vn.
 
-TÀI KHOẢN
-  Sửa file .env.local nếu cần đổi tài khoản TVPL:
-      TVPL_USERNAME=...
-      TVPL_PASSWORD=...
-  Xoá 2 dòng đó thì app chạy ở chế độ khách.
-  Lưu ý: file .env.local trong gói này đang chứa mật khẩu ở dạng chữ thường
-  đọc được. Đừng gửi gói cho người không nên biết mật khẩu.
-
-ĐỔI CỔNG
-  PORT=4000 ./chay.command
+Hướng dẫn đầy đủ: mở file  HUONG-DAN.md
 DOCS
 
 echo
 echo "✓ Xong: $RA"
 echo "  Kích thước: $(du -sh "$RA" | cut -f1)"
+echo
+echo "  Kiểm nhanh trước khi gửi đi:"
+echo "    cd \"$RA\" && ./runtime/node -v"
 echo
 echo "  Nén để mang đi:"
 echo "    cd dist-offline && zip -qr tvpl-nghidinh.zip tvpl-nghidinh"

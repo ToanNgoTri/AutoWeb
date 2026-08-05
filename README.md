@@ -219,8 +219,11 @@ npm run dong-goi -- --khong-node       # gói nhỏ hơn, máy đích phải có
 cd dist-offline && zip -qr tvpl-nghidinh.zip tvpl-nghidinh
 ```
 
-Ra `dist-offline/tvpl-nghidinh/` (**~163 MB** có Node, ~59 MB không Node). Copy sang máy khác, bấm đúp
+Ra `dist-offline/tvpl-nghidinh/` (**~164 MB** có Node, ~59 MB không Node). Copy sang máy khác, bấm đúp
 **`chay.command`** là chạy — không `npm install`, không cài Node.
+
+Hướng dẫn cho người dùng cuối nằm trong **[HUONG-DAN.md](HUONG-DAN.md)**, được copy vào gói cùng với
+`BAT-DAU-TU-DAY.txt` (bản 4 dòng cho người mở gói lần đầu).
 
 Ba thứ làm việc này khả thi:
 
