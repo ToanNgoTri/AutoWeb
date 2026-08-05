@@ -10,7 +10,7 @@
  *   node scripts/dong-goi.mjs --help
  */
 import { spawn } from 'node:child_process'
-import { chmod, cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { chmod, cp, mkdir, mkdtemp, readdir, readlink, rm, stat, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
@@ -131,18 +131,33 @@ if (!existsSync(STANDALONE)) {
   thoat('✗ Không thấy .next/standalone — next.config phải có output: "standalone".')
 }
 await mkdir(RA, { recursive: true })
-await cp(STANDALONE, RA, { recursive: true })
+
+/**
+ * dereference: true là BẮT BUỘC, không phải tuỳ chọn cho đẹp.
+ *
+ * .next/standalone của Next chứa symlink
+ *   .next/node_modules/playwright-core-<hash> → node_modules/playwright-core
+ * (cơ chế của serverExternalPackages). Copy mà giữ symlink thì:
+ *   - trên Windows: EPERM, vì tạo symlink cần quyền admin / Developer Mode
+ *   - trên macOS: tạo được nhưng nó trỏ về ĐƯỜNG DẪN TUYỆT ĐỐI trong project,
+ *     nên gói mang sang máy khác là hỏng — chạy thử ở máy đóng gói vẫn thấy ổn
+ *     vì đường dẫn đó còn tồn tại. Bẫy im lặng.
+ * dereference copy nội dung thật vào gói → tự chứa và không cần quyền gì.
+ */
+const CHEP = { recursive: true, dereference: true }
+
+await cp(STANDALONE, RA, CHEP)
 
 // server.js không tự phục vụ 2 thư mục này, phải copy tay (theo tài liệu Next)
-await cp(join(GOC, '.next', 'static'), join(RA, '.next', 'static'), { recursive: true })
+await cp(join(GOC, '.next', 'static'), join(RA, '.next', 'static'), CHEP)
 if (await coFile(join(GOC, 'public'))) {
-  await cp(join(GOC, 'public'), join(RA, 'public'), { recursive: true })
+  await cp(join(GOC, 'public'), join(RA, 'public'), CHEP)
 }
 
 // kịch bản đã lưu → mang theo để máy đích có sẵn mà dùng
 if (await coFile(join(GOC, 'kich-ban'))) {
   await mkdir(join(RA, 'kich-ban'), { recursive: true })
-  await cp(join(GOC, 'kich-ban'), join(RA, 'kich-ban'), { recursive: true })
+  await cp(join(GOC, 'kich-ban'), join(RA, 'kich-ban'), CHEP)
 }
 
 // .env.local mang theo để máy đích chạy được ngay.
@@ -160,12 +175,30 @@ if (!(await coFile(join(PW_GOI, 'browsers.json')))) {
   console.log('  … thiếu file, copy tay cả package')
   await rm(PW_GOI, { recursive: true, force: true })
   await mkdir(join(RA, 'node_modules'), { recursive: true })
-  await cp(join(GOC, 'node_modules', 'playwright-core'), PW_GOI, { recursive: true })
+  await cp(join(GOC, 'node_modules', 'playwright-core'), PW_GOI, CHEP)
 }
 for (const f of ['browsers.json', 'package.json', 'index.js']) {
   if (!(await coFile(join(PW_GOI, f)))) thoat(`✗ vẫn thiếu playwright-core/${f}`)
 }
 console.log('  ✓ playwright-core đủ file')
+
+// Rào chắn: còn symlink trong gói là gói KHÔNG mang đi được. Bắt lỗi ngay ở đây
+// thay vì để người dùng phát hiện lúc chạy trên máy khác.
+const conSymlink = []
+async function quetSymlink(thuMuc) {
+  for (const e of await readdir(thuMuc, { withFileTypes: true })) {
+    const p = join(thuMuc, e.name)
+    if (e.isSymbolicLink()) conSymlink.push(p)
+    else if (e.isDirectory()) await quetSymlink(p)
+  }
+}
+await quetSymlink(RA)
+if (conSymlink.length) {
+  console.error('✗ Gói còn symlink nên không mang sang máy khác được:')
+  for (const p of conSymlink.slice(0, 10)) console.error(`    ${p} → ${await readlink(p)}`)
+  thoat('  Nguyên nhân thường là thiếu dereference khi copy.')
+}
+console.log('  ✓ không còn symlink nào trong gói')
 
 // ── 4. Node runtime ─────────────────────────────────────────────────────────
 const TEN_NODE_BIN = hdh === 'windows' ? 'node.exe' : 'node'

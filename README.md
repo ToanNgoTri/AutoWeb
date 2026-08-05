@@ -224,6 +224,16 @@ node scripts/dong-goi.mjs --windows --ra D:\USB
 node scripts/dong-goi.mjs --khong-node      # không nhúng Node, máy đích phải có Node >= 20
 ```
 
+Copy bằng `fs.cp` với **`dereference: true`** — bắt buộc, không phải cho đẹp. `.next/standalone` của Next
+chứa symlink `.next/node_modules/playwright-core-<hash>` → package thật (cơ chế `serverExternalPackages`).
+Giữ symlink thì **Windows báo `EPERM`** (tạo symlink cần quyền admin) và **macOS tạo được nhưng trỏ về
+đường dẫn tuyệt đối trong project**, nên gói mang sang máy khác là hỏng — mà chạy thử ở máy đóng gói vẫn
+thấy ổn vì đường dẫn đó còn tồn tại. Bẫy im lặng, đã mất một vòng mới phát hiện.
+
+Vì vậy script có **rào chắn**: sau khi copy nó quét cả gói, còn symlink nào thì in ra rồi `exit 1`. Và
+phép thử đúng cho tính mang đi được là **ẩn `.next` + `node_modules` của project rồi chạy gói** — không
+phải chạy gói khi project vẫn còn nguyên.
+
 Script đóng gói là **`scripts/dong-goi.mjs`** viết bằng Node, chạy được **từ cả Windows lẫn macOS**, và
 đóng được gói cho hệ còn lại. Bản `dong-goi.sh` cũ đã bỏ: nó là bash nên báo
 `'bash' is not recognized` khi đóng gói từ máy Windows. Giải nén Node runtime dùng `tar -xf` cho cả

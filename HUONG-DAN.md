@@ -439,6 +439,7 @@ Kịch bản chỉ ghi `{{TVPL_PASSWORD}}`, nên chia sẻ file JSON không lộ
 | Bước *Đăng nhập* lỗi | Sai tài khoản trong `.env.local`, hoặc site đổi form. Xem thông báo lỗi — app in nguyên văn thông báo của site |
 | *"Không tìm thấy Google Chrome"* / đặt `CHROME_PATH` mà vẫn lỗi | Xem mục **1.6**. Nhớ: `.env.local` phải nằm **cùng thư mục với `chay.bat` / `chay.command`**; Windows trỏ vào `chrome.exe`, macOS trỏ vào `.app` |
 | App không mở, cổng 3000 bận | macOS `PORT=4000 ./chay.command` · Windows `set PORT=4000 && chay.bat` |
+| Đóng gói báo `EPERM: operation not permitted, symlink` | Bản script cũ. Cập nhật `scripts/dong-goi.mjs` — nó phải copy bằng `dereference: true`. Script mới in `✓ không còn symlink nào trong gói` ở bước 3/5 |
 | Windows: cửa sổ đen hiện rồi tắt ngay | Mở Command Prompt, `cd` vào thư mục rồi chạy `chay.bat` để đọc được lỗi |
 | Windows: chữ tiếng Việt trong cửa sổ bị lỗi ô vuông | Chỉ là hiển thị của Command Prompt, app vẫn chạy đúng. Đọc thông báo trong trình duyệt thay vì trong cửa sổ đen |
 | Chrome mở nhưng app báo không nối được | Đóng hết cửa sổ Chrome do app bật (nút **Đóng Chrome**), rồi chạy lại |
