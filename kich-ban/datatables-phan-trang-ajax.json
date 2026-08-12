@@ -1,0 +1,112 @@
+{
+  "ten": "DataTables — bóc bảng qua nhiều trang AJAX",
+  "moTa": "Sân tập cho phân trang AJAX: mỗi lần bấm trang là một XHR thật, URL không đổi, có overlay 'Processing'. Bảng 57 dòng / 10 dòng mỗi trang = 6 trang. Bóc trang 1 trước, rồi vòng lặp bấm 'trang sau' cho tới khi nút next bị disabled. Tất cả các bước 'Lấy bảng' cùng tên 'danh_sach' nên engine tự NỐI THÊM, kết thúc phải ra đúng 57 dòng.",
+  "buoc": [
+    {
+      "id": "dt1",
+      "nhan": "Mở ví dụ DataTables server-side",
+      "hanhDong": {
+        "loai": "mo-trang",
+        "url": "https://datatables.net/examples/core/data_sources/server_side.html",
+        "choSelector": "#example"
+      }
+    },
+    {
+      "id": "dt2",
+      "nhan": "Chờ dữ liệu THẬT về (không chỉ chờ bảng hiện)",
+      "hanhDong": {
+        "loai": "cho",
+        "selector": "#example tbody td.sorting_1",
+        "trangThai": "hien"
+      }
+    },
+    {
+      "id": "dt3",
+      "nhan": "Khẳng định đang ở trang 1",
+      "hanhDong": {
+        "loai": "khang-dinh",
+        "selector": ".dt-info",
+        "dieuKien": "chua-chu",
+        "chu": "Showing 1 to 10",
+        "batBuoc": true
+      }
+    },
+    {
+      "id": "dt4",
+      "nhan": "Bóc trang 1",
+      "hanhDong": {
+        "loai": "lay-bang",
+        "ten": "danh_sach",
+        "selectorDong": "#example tbody tr",
+        "cot": [
+          { "ten": "ho", "selector": "td:nth-child(1)", "nguon": { "kieu": "text" } },
+          { "ten": "ten", "selector": "td:nth-child(2)", "nguon": { "kieu": "text" } },
+          { "ten": "chuc_vu", "selector": "td:nth-child(3)", "nguon": { "kieu": "text" } },
+          { "ten": "van_phong", "selector": "td:nth-child(4)", "nguon": { "kieu": "text" } },
+          { "ten": "ngay_vao", "selector": "td:nth-child(5)", "nguon": { "kieu": "text" } },
+          { "ten": "luong", "selector": "td:nth-child(6)", "nguon": { "kieu": "text" } }
+        ]
+      }
+    },
+    {
+      "id": "dt5",
+      "nhan": "Lặp: sang trang sau rồi bóc, tới khi nút next bị disabled",
+      "hanhDong": {
+        "loai": "lap",
+        "kieu": "cho-den-khi",
+        "toiDa": 30,
+        "dungKhi": {
+          "selector": "button.dt-paging-button.next:not(.disabled)",
+          "dieuKien": "vang-mat"
+        },
+        "buoc": [
+          {
+            "id": "dt5a",
+            "nhan": "Bấm trang sau",
+            "hanhDong": {
+              "loai": "bam",
+              "selector": "button.dt-paging-button.next",
+              "choDieuHuong": false
+            }
+          },
+          {
+            "id": "dt5b",
+            "nhan": "Chờ tới khi ĐÚNG trang {{LAP_SO}}+1 đã hiện",
+            "hanhDong": {
+              "loai": "chay-js",
+              "ma": "return (async () => {\n  const dich = String(Number('{{LAP_SO}}') + 1)\n  for (let i = 0; i < 200; i++) {\n    const trang = document.querySelector('.dt-paging-button.current')?.textContent.trim()\n    const ov = document.querySelector('#example_processing')\n    const dangTai = ov && getComputedStyle(ov).display !== 'none'\n    const coDuLieu = !!document.querySelector('#example tbody td.sorting_1')\n    if (trang === dich && !dangTai && coDuLieu) return 'đã sang trang ' + dich\n    await new Promise((r) => setTimeout(r, 100))\n  }\n  throw new Error('Chờ 20s mà vẫn chưa sang trang ' + dich)\n})()"
+            }
+          },
+          {
+            "id": "dt5c",
+            "nhan": "Bóc trang vừa mở (nối thêm vào danh_sach)",
+            "hanhDong": {
+              "loai": "lay-bang",
+              "ten": "danh_sach",
+              "selectorDong": "#example tbody tr",
+              "cot": [
+                { "ten": "ho", "selector": "td:nth-child(1)", "nguon": { "kieu": "text" } },
+                { "ten": "ten", "selector": "td:nth-child(2)", "nguon": { "kieu": "text" } },
+                { "ten": "chuc_vu", "selector": "td:nth-child(3)", "nguon": { "kieu": "text" } },
+                { "ten": "van_phong", "selector": "td:nth-child(4)", "nguon": { "kieu": "text" } },
+                { "ten": "ngay_vao", "selector": "td:nth-child(5)", "nguon": { "kieu": "text" } },
+                { "ten": "luong", "selector": "td:nth-child(6)", "nguon": { "kieu": "text" } }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "dt6",
+      "nhan": "Lấy dòng tổng kết của site để đối chiếu số dòng bóc được",
+      "hanhDong": {
+        "loai": "lay-mot",
+        "ten": "site_bao_tong",
+        "selector": ".dt-info",
+        "nguon": { "kieu": "text" },
+        "regex": "of ([0-9,]+) entries"
+      }
+    }
+  ]
+}

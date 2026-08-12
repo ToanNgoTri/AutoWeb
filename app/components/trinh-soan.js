@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { kiemTraKichBan } from '@/lib/kich-ban/loai'
 import { DANH_SACH_MAU, MAU_TVPL_NGHI_DINH } from '@/lib/kich-ban/mau'
 import { PACE_OPTIONS } from '@/lib/tvpl/types'
+import { MIME_XLSX, taoXlsx, tenTepAnToan } from '@/lib/xuat/xlsx'
 import { BoiCanh } from './boi-canh'
 import { DanhSachBuoc } from './danh-sach-buoc'
 import { KhoiPhucHoi } from './khoi-phuc-hoi'
@@ -379,16 +380,32 @@ function KhoiKetQua({ ketQua }) {
   const bangs = Object.entries(ketQua.bang)
   const giaTris = Object.entries(ketQua.giaTri)
 
+  const tai = (tenTep, blob) => {
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = tenTep
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
   const taiCsv = (ten, dong) => {
     if (!dong.length) return
     const cot = Object.keys(dong[0])
     const esc = (v) => `"${(v ?? '').replace(/"/g, '""')}"`
     const csv = [cot.join(','), ...dong.map((d) => cot.map((c) => esc(d[c])).join(','))].join('\n')
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }))
-    a.download = `${ten}.csv`
-    a.click()
-    URL.revokeObjectURL(a.href)
+    tai(`${tenTepAnToan(ten)}.csv`, new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }))
+  }
+
+  /**
+   * Excel là định dạng nên dùng: mọi ô ép sẵn kiểu text nên số hiệu văn bản kiểu
+   * "01/2024/NĐ-CP" hay "12/2024" không bị Excel đọc thành ngày như khi mở CSV.
+   *
+   * @param {{ ten: string, dong: Record<string, any>[] }[]} bang
+   * @param {string} tenTep
+   */
+  const taiExcel = (bang, tenTep) => {
+    if (!bang.some((b) => b.dong.length)) return
+    tai(`${tenTepAnToan(tenTep)}.xlsx`, new Blob([taoXlsx(bang)], { type: MIME_XLSX }))
   }
 
   return (
@@ -406,6 +423,14 @@ function KhoiKetQua({ ketQua }) {
         >
           {ketQua.urlCuoi} ↗
         </a>
+        {bangs.length > 1 && (
+          <button
+            onClick={() => taiExcel(bangs.map(([ten, dong]) => ({ ten, dong })), 'ket-qua')}
+            className="rounded border border-emerald-800 bg-emerald-950/40 px-2 py-0.5 text-[11px] text-emerald-300 hover:bg-emerald-900/50"
+          >
+            Tải Excel — {bangs.length} bảng thành {bangs.length} sheet
+          </button>
+        )}
       </div>
 
       {giaTris.length > 0 && (
@@ -428,6 +453,12 @@ function KhoiKetQua({ ketQua }) {
             <div className="mb-1.5 flex items-center gap-2">
               <span className="font-mono text-xs text-emerald-300">{ten}</span>
               <span className="text-xs text-neutral-500">{dong.length} dòng</span>
+              <button
+                onClick={() => taiExcel([{ ten, dong }], ten)}
+                className="rounded border border-emerald-800 bg-emerald-950/40 px-2 py-0.5 text-[11px] text-emerald-300 hover:bg-emerald-900/50"
+              >
+                Tải Excel
+              </button>
               <button
                 onClick={() => taiCsv(ten, dong)}
                 className="rounded border border-neutral-700 px-2 py-0.5 text-[11px] text-neutral-400 hover:bg-neutral-800"
