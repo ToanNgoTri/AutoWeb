@@ -26,8 +26,9 @@ export function KhoiPhucHoi({ ds, doi }) {
       ...ds,
       {
         ten: `Phục hồi ${ds.length + 1}`,
-        khi: { selector: '', dieuKien: 'co-mat' },
+        khi: { kieu: 'phan-tu', selector: '', dieuKien: 'co-mat', url: '', dieuKienUrl: 'khop' },
         tuKichHoat: true,
+        quayLaiTrang: true,
         buoc: [{ id: idMoi(), hanhDong: { loai: 'bam', selector: '' } }],
       },
     ])
@@ -97,20 +98,79 @@ export function KhoiPhucHoi({ ds, doi }) {
 
               <div className="mb-2.5 rounded-md border border-neutral-800 bg-neutral-950/40 p-2">
                 <p className={lbl}>Dấu hiệu cần phục hồi</p>
-                <OSelector
-                  nhan="Phần tử làm dấu hiệu"
-                  giaTri={p.khi.selector}
-                  doi={(v) => dat(i, { khi: { ...p.khi, selector: v } })}
-                  goiY=".txt-account-Home"
-                />
                 <select
-                  value={p.khi.dieuKien}
-                  onChange={(e) => dat(i, { khi: { ...p.khi, dieuKien: e.target.value } })}
-                  className={`${inp} mt-2`}
+                  value={p.khi.kieu ?? 'phan-tu'}
+                  onChange={(e) => dat(i, { khi: { ...p.khi, kieu: e.target.value } })}
+                  className={`${inp} mb-2`}
                 >
-                  <option value="co-mat">…phần tử đó HIỆN ra (ví dụ ô đăng nhập trở lại)</option>
-                  <option value="vang-mat">…phần tử đó ẨN đi (ví dụ mất khối thông tin tài khoản)</option>
+                  <option value="phan-tu">Nhận ra bằng PHẦN TỬ trên trang</option>
+                  <option value="url">Nhận ra bằng URL (site đá về trang chủ / trang đăng nhập)</option>
+                  <option value="ca-hai">Cả hai — phải thoả CẢ phần tử LẪN URL (ít báo nhầm nhất)</option>
                 </select>
+
+                {(p.khi.kieu ?? 'phan-tu') !== 'url' && (
+                  <>
+                    <OSelector
+                      nhan="Phần tử làm dấu hiệu"
+                      giaTri={p.khi.selector ?? ''}
+                      doi={(v) => dat(i, { khi: { ...p.khi, selector: v } })}
+                      goiY=".txt-account-Home"
+                    />
+                    <select
+                      value={p.khi.dieuKien ?? 'co-mat'}
+                      onChange={(e) => dat(i, { khi: { ...p.khi, dieuKien: e.target.value } })}
+                      className={`${inp} mt-2`}
+                    >
+                      <option value="co-mat">…phần tử đó HIỆN ra (ví dụ ô đăng nhập trở lại)</option>
+                      <option value="vang-mat">…phần tử đó ẨN đi (ví dụ mất khối thông tin tài khoản)</option>
+                    </select>
+                  </>
+                )}
+
+                {(p.khi.kieu ?? 'phan-tu') !== 'phan-tu' && (
+                  <div className={(p.khi.kieu ?? 'phan-tu') === 'ca-hai' ? 'mt-2' : ''}>
+                    <label className={lbl}>URL làm dấu hiệu</label>
+                    <input
+                      value={p.khi.url ?? ''}
+                      onChange={(e) => dat(i, { khi: { ...p.khi, url: e.target.value } })}
+                      placeholder="https://thuvienphapluat.vn"
+                      spellCheck={false}
+                      className={`${inp} font-mono text-sky-300`}
+                    />
+                    <select
+                      value={p.khi.dieuKienUrl ?? 'khop'}
+                      onChange={(e) => dat(i, { khi: { ...p.khi, dieuKienUrl: e.target.value } })}
+                      className={`${inp} mt-2`}
+                    >
+                      <option value="khop">…URL hiện tại KHỚP mẫu trên (bị đá về đúng trang này)</option>
+                      <option value="khong-khop">…URL hiện tại KHÔNG khớp mẫu trên (đã rời khỏi trang cần ở)</option>
+                    </select>
+                    <p className="mt-1 text-[11px] leading-relaxed text-neutral-500">
+                      Mặc định là khớp <b>đúng cả URL</b> (không phân biệt hoa thường, bỏ qua dấu{' '}
+                      <code className="text-neutral-400">/</code> thừa ở cuối). Dùng{' '}
+                      <code className="text-neutral-400">*</code> cho đoạn bất kỳ —{' '}
+                      <code className="text-neutral-400">https://thuvienphapluat.vn/dang-nhap*</code> — hoặc
+                      bọc trong <code className="text-neutral-400">/…/</code> để dùng regex.
+                    </p>
+                  </div>
+                )}
+
+                <label className="mt-2 flex cursor-pointer items-start gap-1.5 text-[11px] text-neutral-400">
+                  <input
+                    type="checkbox"
+                    checked={p.quayLaiTrang !== false}
+                    onChange={(e) => dat(i, { quayLaiTrang: e.target.checked })}
+                    className="mt-0.5 h-3 w-3 accent-emerald-500"
+                  />
+                  <span>
+                    Quay lại trang đang dở sau khi khắc phục
+                    <span className="text-neutral-500">
+                      {' '}
+                      — đăng nhập lại xong mà đang đứng ở trang chủ thì tự mở lại đúng trang lúc bị văng, rồi
+                      mới chạy tiếp bước đang làm. Với dấu hiệu kiểu URL thì gần như bắt buộc bật.
+                    </span>
+                  </span>
+                </label>
               </div>
 
               <p className="mb-1 text-[11px] font-medium text-emerald-300">

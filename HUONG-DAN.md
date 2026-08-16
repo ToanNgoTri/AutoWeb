@@ -299,6 +299,17 @@ Mỗi bước có: **↑ ↓** đổi thứ tự · **⧉** nhân bản · **●
 2. Bấm **◎** → sang cửa sổ Chrome.
 3. Rê chuột: phần tử sáng lên kèm selector. Bấm vào phần tử → selector nhảy về app. `Esc` để huỷ.
 
+**Phần tử phải bấm mới hiện ra** — dropdown, menu, accordion, tab: trong lúc chọn, cú bấm thường bị app
+bắt lấy để đọc selector nên trang không phản ứng gì. Giữ **Alt** (trên Mac là **⌥ Option**) rồi bấm thì
+cú bấm đi thẳng vào trang như người thật:
+
+1. **Alt+bấm** vào nút `div` → nó sổ ra danh sách `<a>` bên trong.
+2. **Bấm thường** vào đúng thẻ `<a>` muốn lấy → selector nhảy về app.
+
+Đang giữ Alt thì khung viền và banner chuyển sang **màu vàng** kèm chữ *"bấm thật vào phần tử này"* —
+nhìn màu là biết cú bấm sắp tới sẽ đi đâu. Alt+bấm bao nhiêu lần cũng được, chế độ chọn vẫn sống; chỉ
+khi cú bấm đó làm **chuyển trang** thì chế độ chọn bị ngắt (app báo rõ) — bấm **◎** lần nữa là tiếp tục.
+
 App còn đưa ra các selector thay thế kèm **số phần tử mà nó khớp**:
 
 - Cần **đúng 1** cho *Bấm* / *Điền*.
@@ -409,6 +420,57 @@ lần chạy đầu chưa đăng nhập thì nó đăng nhập, và đang chạy
 
 Bỏ tick **Tự kích hoạt** nếu chỉ muốn gọi tay bằng hành động *Gọi phục hồi*.
 
+#### Nhận ra bằng URL — "cứ bị đá về trang này là biết văng phiên"
+
+Nhiều site mất phiên là đẩy thẳng về trang chủ hoặc trang đăng nhập, chẳng để lại phần tử nào chắc chắn
+để bám. Ô **Dấu hiệu** vì vậy có ba kiểu:
+
+| Kiểu | Nhận ra bằng | Dùng khi |
+|---|---|---|
+| **Phần tử** *(mặc định)* | selector hiện / ẩn | trang nào cũng có ô đăng nhập khi bị out |
+| **URL** | URL hiện tại khớp / không khớp mẫu | bị đá về đúng một địa chỉ cố định |
+| **Cả hai** | phải thoả **cả** phần tử **lẫn** URL | chắc ăn nhất, ít báo nhầm |
+
+Mẫu URL viết ba cách:
+
+| Viết | Khớp cái gì |
+|---|---|
+| `https://thuvienphapluat.vn` | **đúng URL đó** — không phân biệt hoa/thường, `/` thừa ở cuối bỏ qua |
+| `https://thuvienphapluat.vn/*` | trang đó **và mọi trang con**; `*` thay cho đoạn bất kỳ |
+| `/dang-nhap\|login/i` | bọc trong `/…/` là **regex** |
+
+⚠️ Cố ý **không** mặc định "chứa chuỗi": `https://thuvienphapluat.vn` là tiền tố của mọi trang trong
+site, nếu hiểu là chứa-chuỗi thì dấu hiệu lúc nào cũng đúng và phục hồi chạy vô tận. Muốn "mọi trang
+con" thì thêm `*`.
+
+App còn **hỏng sớm** thay vì đứng chờ đủ 180s cho một phần tử không bao giờ hiện: đang chờ trang tải mà
+URL trùng dấu hiệu là báo lỗi ngay; chờ quá 4 giây chưa thấy mốc thì dò thêm cả dấu hiệu kiểu phần tử.
+Lỗi đó làm bước hiện tại chạy lại sau khi phục hồi — đúng cái ta cần.
+
+#### Quay lại trang đang dở
+
+Đây là chỗ hay hụt: **đăng nhập lại xong thường nằm ở trang chủ, không phải trang đang dùng dở.** Kịch
+bản chạy tiếp trên trang chủ thì bước sau bóc ra rỗng hoặc lỗi.
+
+Tick **"Quay lại trang đang dở sau khi khắc phục"** (mặc định bật) để app tự mở lại đúng trang lúc bị
+văng rồi mới chạy tiếp. App biết "trang đang dở" là trang nào nhờ ghi lại URL **ở thời điểm vừa kiểm
+xong mọi dấu hiệu và thấy sạch** — chứ không ghi bừa URL sau mỗi bước, vì URL đó có khi đã là trang chủ
+mà site vừa đá về.
+
+Hai đường về, app chọn đường chắc hơn:
+
+| Bị đá về lúc | App làm gì |
+|---|---|
+| Đang chờ một bước **Mở trang** | Bước đó hỏng ngay → phục hồi → **chạy lại chính bước đó**, tự nó biết URL cần mở |
+| Giữa hai bước (bấm một cái là văng) | Phục hồi → **mở lại URL lành lặn gần nhất** → chạy tiếp bước đang tới |
+
+Vì vậy bước **Mở trang** nên luôn khai *phần tử làm mốc*: có mốc thì bị đá về là hỏng ngay đúng bước đó
+và về đúng chỗ, không mốc thì app không biết trang vừa mở là trang sai.
+
+Với dấu hiệu kiểu URL thì gần như **bắt buộc bật** — vì URL không tự đổi sau khi đăng nhập, dấu hiệu sẽ
+còn nguyên. App chặn sẵn: chạy phục hồi **3 lần liên tiếp** mà dấu hiệu vẫn còn thì dừng hẳn và nói rõ
+lý do, không lặp vô tận.
+
 ### 3.8 Mật khẩu — đừng gõ trực tiếp vào kịch bản
 
 Ô nội dung của **Điền** hỗ trợ `{{TEN_BIEN}}`, thay bằng biến trong `.env.local` lúc chạy:
@@ -433,6 +495,8 @@ Kịch bản chỉ ghi `{{TVPL_PASSWORD}}`, nên chia sẻ file JSON không lộ
 | Lần chạy đầu chậm (~10–15s ở bước mở trang) | Đang vượt Cloudflare. Các lần sau nhanh hơn nhờ profile Chrome ở `~/.tvpl-chrome-cdp` giữ cookie |
 | *"Đang có một kịch bản khác chạy"* | Chỉ cho 1 phiên cùng lúc (Cloudflare rất nhạy với request song song). Chờ xong hoặc bấm **Ngắt** |
 | Bước lỗi *"Timeout … waiting for locator"* | Selector không còn đúng. Bấm **◎** chọn lại phần tử |
+| Đang chọn ◎ mà bấm nút không thấy dropdown sổ ra | Cú bấm bị app bắt lấy để đọc selector. Giữ **Alt (⌥)** rồi bấm — xem mục **3.2** |
+| *"Đã chạy phục hồi … 3 lần liên tiếp mà dấu hiệu vẫn còn"* | Khắc phục xong nhưng dấu hiệu không tắt. Nếu dấu hiệu là URL: bật **Quay lại trang đang dở**, hoặc đổi mẫu URL cho hẹp lại (đừng để `*` quét cả site) |
 | Cột trong bảng rỗng hết | Selector cột sai, hoặc regex không khớp. Thử bỏ regex trước để xem giá trị thô |
 | Cột rỗng chỉ ở vài dòng | Có thể dữ liệu **thật sự không có** trên trang đó, không phải lỗi. Mở tay trang đó trong Chrome kiểm chứng |
 | Cột Hiệu lực / Tình trạng hiện *"Đã biết"* | Nội dung này thuvienphapluat.vn chỉ mở cho **gói trả phí**; đăng nhập thường không đủ |
